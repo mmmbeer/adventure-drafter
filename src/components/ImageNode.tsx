@@ -23,7 +23,7 @@ export function ImageNode(props: NodeViewProps) {
         shapeMargin: "5px",
       }}
     >
-      <img src={src} alt={node.attrs.alt ?? ""} draggable={false} data-blend={node.attrs.blend ?? "normal"} />
+      <img src={src} alt={node.attrs.alt ?? ""} draggable={false} data-width={width} data-flow={flow} data-blend={node.attrs.blend ?? "normal"} />
       {editor.isEditable && (
         <>
           <div className="node-tools no-print" contentEditable={false}>
