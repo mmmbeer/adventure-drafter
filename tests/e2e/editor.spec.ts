@@ -214,10 +214,17 @@ test("pasted images, URL art, custom fonts and named versions survive a publishi
   );
   await expect(page.locator(".canvas img")).toHaveCount(1);
   await expect(page.locator(".page-background")).toHaveCount(1);
+  await expect(page.locator(".overflow-note")).toHaveCount(0, { timeout: 30000 });
   await page.getByRole("button", { name: "Export", exact: true }).click();
-  const download = page.waitForEvent("download");
+  const download = page.waitForEvent("download", { timeout: 70000 });
   await page.getByRole("button", { name: /PDF · exact appearance/ }).click();
-  const output = await download;
+  const error = page.locator(".toast").filter({ hasText: /overflow|could not|failed|cannot|unavailable/i });
+  const output = await Promise.race([
+    download,
+    error.waitFor({ state: "visible", timeout: 70000 }).then(async () => {
+      throw new Error(`PDF export error: ${await error.innerText()}`);
+    }),
+  ]);
   await output.saveAs(test.info().outputPath("illustrated.pdf"));
   expect(
     (await fs.stat(test.info().outputPath("illustrated.pdf"))).size,

@@ -41,13 +41,14 @@ export function usePageActions(state: WorkspaceState) {
     (id: string, nodes: JSONContent[], cursor?: number) =>
       update((d) => {
         const i = d.pages.findIndex((p) => p.id === id);
-        if (i < 0) return d;
+        if (i < 0 || !nodes.length || d.pages.length >= 1000) return d;
         const pages = [...d.pages];
         const next = pages[i + 1];
         let nextId = next?.id;
-        if (next?.kind === "body" && !next.breakBefore) {
+        if (next?.kind === "body" && (!next.breakBefore || next.continuedFrom === id)) {
           pages[i + 1] = {
             ...next,
+            continuedFrom: id,
             content: {
               type: "doc",
               content: [...nodes, ...(next.content.content ?? [])],
@@ -57,6 +58,7 @@ export function usePageActions(state: WorkspaceState) {
           const p = {
             ...makePage("body", nodes),
             breakBefore: false,
+            continuedFrom: id,
             columns: pages[i].columns,
           };
           pages.splice(i + 1, 0, p);
@@ -160,6 +162,7 @@ export function usePageActions(state: WorkspaceState) {
       if (!buffer.length) return;
       groups.push({
         ...buffer[0],
+        continuedFrom: undefined,
         content: {
           type: "doc",
           content: buffer.flatMap((p) => p.content.content ?? []),

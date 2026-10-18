@@ -21,7 +21,7 @@ import {
   Columns2,
 } from "lucide-react";
 import { fonts } from "../lib/fonts";
-import { heading, paragraph } from "../lib/model";
+import { makeTemplate, type TemplateKind } from "../lib/template-blocks";
 import type { ReactNode } from "react";
 export function Tool({
   label,
@@ -81,45 +81,14 @@ export function Toolbar({
     const c = editor.chain().focus();
     if (type === "table")
       c.insertTable({ rows: 4, cols: 3, withHeaderRow: true }).run();
-    else if (type === "statBlock")
-      c.insertContent({
-        type: "statBlock",
-        content: [
-          heading("Creature name", 2),
-          paragraph("Medium creature, alignment"),
-          paragraph("Armor Class 12 • Hit Points 22 • Speed 30 ft."),
-          paragraph("STR 12  DEX 14  CON 12  INT 10  WIS 12  CHA 10"),
-          heading("Traits", 3),
-          paragraph("Trait name. Describe the creature’s signature ability."),
-          heading("Actions", 3),
-          paragraph(
-            "Attack. +4 to hit, reach 5 ft., one target. Hit: 7 (1d8 + 3) damage.",
-          ),
-        ],
-      }).run();
+    else if (type === "statBlock" || type === "magicItem")
+      c.insertContent(makeTemplate(type === "statBlock" ? "creature" : "magicItem")).run();
     else if (type === "columnBreak")
       c.insertContent({ type: "columnBreak" }).run();
     else if (type === "image") onDialog("image");
     else if (type === "page") onInsertPage();
     else if (type === "rule") c.setHorizontalRule().run();
-    else if (type)
-      c.insertContent({
-        type: "callout",
-        attrs: { kind: type },
-        content: [
-          heading(
-            type === "readaloud"
-              ? "Read aloud"
-              : type === "aside"
-                ? "Game Master’s notes"
-                : type === "encounter"
-                  ? "Encounter"
-                  : "Treasure",
-            3,
-          ),
-          paragraph("Write here…"),
-        ],
-      }).run();
+    else if (type) c.insertContent(makeTemplate(type as TemplateKind)).run();
   };
   return (
     <div
@@ -347,6 +316,7 @@ export function Toolbar({
         <option value="encounter">Encounter</option>
         <option value="treasure">Treasure</option>
         <option value="statBlock">Creature stat block</option>
+        <option value="magicItem">Magic item</option>
         <option value="table">Table</option>
         <option value="image">Image</option>
         <option value="rule">Horizontal rule</option>

@@ -38,6 +38,7 @@ export function PageEditor({
 }: Props) {
   const [overflow, setOverflow] = useState(false);
   const [oversized, setOversized] = useState(false);
+  const paginationPending = useRef(false);
   const latest = useRef({ onChange, onFocus, onOverflow, page, readOnly });
   latest.current = { onChange, onFocus, onOverflow, page, readOnly };
   const container = useRef<HTMLDivElement>(null);
@@ -105,6 +106,8 @@ export function PageEditor({
       JSON.stringify(editor.getJSON()) !== JSON.stringify(page.content)
     )
       editor.commands.setContent(page.content, { emitUpdate: false });
+    // The editor and persisted page have caught up with the previous split.
+    paginationPending.current = false;
   }, [editor, page.content]);
   useEffect(() => {
     if (!editor || page.kind === "toc" || page.kind === "index") return;
@@ -112,7 +115,7 @@ export function PageEditor({
     const check = () => {
       clearTimeout(timer);
       timer = setTimeout(() => {
-        if (!editor || editor.isDestroyed) return;
+        if (!editor || editor.isDestroyed || paginationPending.current) return;
         const el = editor.view.dom;
         const spills =
           el.scrollWidth > el.clientWidth + 4 ||
@@ -129,13 +132,22 @@ export function PageEditor({
         const nodes: JSONContent[] =
           (editor.getJSON() as JSONContent).content ?? [];
         if (!nodes.length) return;
-        const right = el.getBoundingClientRect().right;
+        const bounds = el.getBoundingClientRect();
         const children = [...el.children];
         let spill = children.findIndex((child) =>
-          [...child.getClientRects()].some((r) => r.right > right + 2),
+          [...child.getClientRects()].some((r) =>
+            r.right > bounds.right + 3 || r.left < bounds.left - 3 ||
+            (el.scrollHeight > el.clientHeight + 4 && r.bottom > bounds.bottom + 3)),
         );
         if (spill < 0) spill = nodes.length - 1;
         spill = Math.min(spill, nodes.length - 1);
+        // Multicolumn scroll metrics sometimes find a trailing image without
+        // exposing an out-of-bounds child rect. Move that image with any empty
+        // paragraphs that follow it, rather than endlessly moving blank text.
+        while (
+          spill > 0 && nodes[spill].type === "paragraph" &&
+          !(nodes[spill].content ?? []).length
+        ) spill--;
         let remaining = nodes.slice(0, spill),
           moved = nodes.slice(spill);
         if (spill === 0) {
@@ -149,6 +161,10 @@ export function PageEditor({
         } else if (remaining.at(-1)?.type === "heading") {
           moved.unshift(remaining.pop()!);
         }
+        if (!moved.length || JSON.stringify(moved) === JSON.stringify(nodes)) {
+          setOversized(true);
+          return;
+        }
         const selection = editor.state.selection.from;
         const retainedSize = remaining.reduce(
           (sum, n) => sum + editor.schema.nodeFromJSON(n).nodeSize,
@@ -158,6 +174,7 @@ export function PageEditor({
           editor.isFocused && selection > retainedSize
             ? Math.max(1, selection - retainedSize)
             : undefined;
+        paginationPending.current = true;
         editor.commands.setContent(
           { type: "doc", content: remaining },
           { emitUpdate: false },
@@ -280,6 +297,11 @@ export function PageEditor({
         </section>
       ) : (
         <EditorContent editor={editor} className="page-writing" />
+      )}
+      {doc.pages[index + 1]?.continuedFrom === page.id && page.kind === "body" && (
+        <div className="continuation-hint no-print" role="note" aria-label="Content continues on next page">
+          Continued on next page ↘
+        </div>
       )}
       <footer className="page-footer">
         <span>{doc.settings.footer || doc.author}</span>

@@ -46,6 +46,8 @@ export function validateAdventure(value: unknown): Adventure {
     )
       d.settings.theme[key] = themes[0][key];
   for (const p of d.pages) {
+    if (p.continuedFrom && (typeof p.continuedFrom !== "string" || p.continuedFrom === p.id))
+      delete p.continuedFrom;
     p.columns =
       p.columns === undefined
         ? undefined
