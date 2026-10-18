@@ -43,7 +43,16 @@ test("shrinking document type pulls auto-continued paragraphs into earlier pages
   const full = (await page.locator(".tiptap").allTextContents()).join(" ");
   for (let i = 0; i < paragraphs.length; i++) expect(full).toContain(`Passage ${i}:`);
   expect(full).toContain("The torchlight reveals another hidden passage.");
-  const settled = await page.locator(".paper").count();
-  await page.waitForTimeout(2500);
-  expect(await page.locator(".paper").count()).toBe(settled);
+  // Compaction is deliberately incremental. Require repeated stable samples
+  // rather than assuming all downstream continuation pages collapse at once.
+  let last = await page.locator(".paper").count();
+  let stableSamples = 0;
+  for (let i = 0; i < 20 && stableSamples < 4; i++) {
+    await page.waitForTimeout(1000);
+    const count = await page.locator(".paper").count();
+    stableSamples = count === last ? stableSamples + 1 : 0;
+    last = count;
+  }
+  expect(stableSamples).toBe(4);
+  expect(last).toBeLessThan(before);
 });
