@@ -135,7 +135,7 @@ export function patchTemplate(node: JSONContent, values: TemplateFields): JSONCo
   const seen = new Set<string>();
   const nodes: JSONContent[] = [];
   (node.content ?? []).forEach((part, index) => {
-    const key = role(part, index, kind);
+    const key = role(part, index, kind, node.content ?? []);
     if (key === "oldAbilities") return;
     if (key === "abilities" && kind === "creature") {
       seen.add(key);
