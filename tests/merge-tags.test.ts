@@ -6,9 +6,35 @@ import {
   physicalPageCount, sheetCount, validateAdventure,
 } from "../src/lib/model";
 import { extensions } from "../src/lib/editor";
-import { mergeNode, mergeValue, interpolateMergeTags, resolveText, repairLegacyMergeTagArtifacts } from "../src/lib/merge-tags";
+import { mergeNode, mergeValue, interpolateMergeTags, resolveText, repairLegacyMergeTagArtifacts, hydrateMergeTags } from "../src/lib/merge-tags";
 
 describe("dynamic merge tags and automatic references", () => {
+  it("hydrates saved raw placeholders and is idempotent without changing code", () => {
+    const content = {
+      type: "doc",
+      content: [
+        { type: "paragraph", content: [
+          { type: "text", text: "A {title} by {author}. {unknown}" },
+          { type: "text", text: " and {page}", marks: [{ type: "bold" }] },
+        ] },
+        { type: "codeBlock", content: [{ type: "text", text: "{title}" }] },
+        { type: "paragraph", content: [
+          { type: "text", text: "{author}", marks: [{ type: "code" }] },
+        ] },
+      ],
+    };
+    const hydrated = hydrateMergeTags(content);
+    const values = hydrated.content?.[0].content ?? [];
+    expect(values.filter((v) => v.type === "mergeTag").map((v) => v.attrs?.name))
+      .toEqual(["title", "author", "page"]);
+    expect(values.map((v) => v.text ?? "").join("")).toContain("{unknown}");
+    expect(values.find((v) => v.type === "mergeTag" && v.attrs?.name === "page")?.marks)
+      .toEqual([{ type: "bold" }]);
+    expect(hydrated.content?.[1]).toEqual(content.content[1]);
+    expect(hydrated.content?.[2]).toEqual(content.content[2]);
+    expect(hydrateMergeTags(hydrated)).toEqual(hydrated);
+  });
+
   it("repairs only the legacy duplicated-token-and-braces signature", () => {
     const d = createAdventure(true);
     d.pages = [page("body", [
