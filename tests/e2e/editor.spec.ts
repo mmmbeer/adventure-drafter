@@ -15,6 +15,7 @@ test("page editing, templates, generated references, local save, backup and rest
   await editor.click();
   await page.keyboard.press("Control+End");
   await page.keyboard.type(" A secret about the Ember Archive.");
+  await page.getByRole("button", { name: "Style", exact: true }).click();
   await page.getByRole("button", { name: /Field notes/ }).click();
   await expect(editor).toContainText("A secret about the Ember Archive.");
   await page.getByRole("button", { name: "Add page", exact: true }).click();
