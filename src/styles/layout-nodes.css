@@ -140,3 +140,11 @@
 @media print {
   .tiptap .node-tools, .tiptap .node-resize { display: none !important; }
 }
+
+.template-layout-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); }
+.template-layout-controls label { margin: 0; }
+.template-layout-controls .check { grid-column: 1 / -1; }
+@media (max-width: 540px) { .template-layout-controls { grid-template-columns: 1fr; } }
+.tiptap section[data-statblock] table:first-of-type th,
+.tiptap section[data-statblock] table:first-of-type td { text-align: center; }
+.tiptap section[data-statblock] table:first-of-type p { text-align: center; }
