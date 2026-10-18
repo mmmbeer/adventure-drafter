@@ -123,8 +123,8 @@ const MergeTag = Node.create({
     } };
   },
   parseHTML() { return [{ tag: "span[data-merge-tag]" }]; },
-  renderHTML({ HTMLAttributes }) {
-    const name = validMergeTag(HTMLAttributes.name) ? HTMLAttributes.name : "title";
+  renderHTML({ node, HTMLAttributes }) {
+    const name = validMergeTag(node.attrs.name) ? node.attrs.name : "title";
     return ["span", mergeAttributes(HTMLAttributes, {
       "data-merge-tag": name, class: "merge-tag",
     }), `{${name}}`];
