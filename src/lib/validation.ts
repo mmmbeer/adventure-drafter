@@ -71,6 +71,8 @@ export function validateAdventure(value: unknown): Adventure {
     footer: typeof d.settings.footer === "string" ? d.settings.footer : "",
     pageStart: Math.min(100000, Math.max(1, Number(d.settings.pageStart) || 1)),
     tocDepth: Math.min(9, Math.max(1, Number(d.settings.tocDepth) || 3)),
+    autoIndexHeadings: d.settings.autoIndexHeadings !== false,
+    indexDepth: Math.min(9, Math.max(1, Number(d.settings.indexDepth) || 3)),
     columns: Math.min(3, Math.max(1, Number(d.settings.columns) || 2)),
     fontSize: Math.min(24, Math.max(10, Number(d.settings.fontSize) || 15)),
     margin: Math.min(100, Math.max(25, Number(d.settings.margin) || 58)),
