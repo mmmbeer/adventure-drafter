@@ -89,7 +89,6 @@ export function usePageActions(state: WorkspaceState) {
         if (i < 0 || !prev || !source || source.id !== plan.sourceId ||
             prev.kind !== "body" || source.kind !== "body" ||
             source.continuedFrom !== id || source.breakBefore ||
-            JSON.stringify(prev.content.content ?? []) !== JSON.stringify(plan.before) ||
             JSON.stringify(source.content.content ?? []) !== JSON.stringify(plan.source)) return d;
         const pages = [...d.pages];
         pages[i] = { ...prev, content: {
