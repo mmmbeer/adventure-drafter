@@ -142,7 +142,8 @@ export function templateRichFields(node: JSONContent): RichTemplateFields {
     if (!allowed.has(key)) return;
     const attrs = { ...(part.attrs ?? {}) };
     delete attrs.templateField;
-    (result[key] ??= []).push({ ...part, attrs: Object.keys(attrs).length ? attrs : undefined });
+    const { attrs: _fieldAttrs, ...clean } = part;
+    (result[key] ??= []).push(Object.keys(attrs).length ? { ...clean, attrs } : clean);
   });
   return result;
 }
@@ -152,6 +153,7 @@ export function patchTemplate(
 ): JSONContent {
   const kind = node.attrs?.kind ?? "creature";
   const seen = new Set<string>();
+  const original = templateFields(node);
   const nodes: JSONContent[] = [];
   (node.content ?? []).forEach((part, index) => {
     const key = role(part, index, kind, node.content ?? []);
@@ -165,10 +167,12 @@ export function patchTemplate(
       seen.add(key);
       nodes.push(abilityTable(values));
     } else if (key && values[key] !== undefined) {
+      // Preserve every formatted paragraph belonging to an unchanged field.
+      // Only consolidate multiple blocks when the user changes the plain value.
+      if (original[key] === values[key]) nodes.push(part);
+      else if (!seen.has(key))
+        nodes.push(field({ ...part, content: values[key] ? [text(values[key])] : [] }, key));
       seen.add(key);
-      // Replacing only standard fields leaves custom sections and paragraphs intact.
-      if (nodeText(part) === values[key]) nodes.push(part);
-      else nodes.push(field({ ...part, content: values[key] ? [text(values[key])] : [] }, key));
     } else nodes.push(part);
   });
   const required = kind === "creature"
