@@ -1,4 +1,4 @@
-import { Palette, Settings2, BookOpen, X } from "lucide-react";
+import { Palette, Settings2, BookOpen, X, ScanSearch } from "lucide-react";
 import {
   InspectorContext,
   useInspectorState,
@@ -6,7 +6,8 @@ import {
 } from "./inspector/context";
 import { StylePanel } from "./inspector/StylePanel";
 import { PagePanel } from "./inspector/PagePanel";
-import { PublishingPanel } from "./inspector/PublishingPanel";
+import { DocumentPanel } from "./inspector/DocumentPanel";
+import { SelectionPanel } from "./inspector/SelectionPanel";
 export function Inspector(props: InspectorProps) {
   const state = useInspectorState(props);
   const { tab, setTab, onClose } = state;
@@ -15,9 +16,10 @@ export function Inspector(props: InspectorProps) {
       <aside className="inspector">
         <div className="inspector-tabs">
           {[
-            ["style", Palette, "Style"],
+            ["inspect", ScanSearch, "Inspect"],
             ["page", Settings2, "Page"],
-            ["publish", BookOpen, "Publish"],
+            ["style", Palette, "Style"],
+            ["document", BookOpen, "Document"],
           ].map(([id, Icon, label]) => {
             const I = Icon as typeof Palette;
             return (
@@ -39,12 +41,14 @@ export function Inspector(props: InspectorProps) {
             <X size={14} />
           </button>
         </div>
-        {tab === "style" ? (
-          <StylePanel />
+        {tab === "inspect" ? (
+          <SelectionPanel />
         ) : tab === "page" ? (
           <PagePanel />
+        ) : tab === "style" ? (
+          <StylePanel />
         ) : (
-          <PublishingPanel />
+          <DocumentPanel />
         )}
       </aside>
     </InspectorContext.Provider>
