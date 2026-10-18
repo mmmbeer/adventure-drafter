@@ -3,10 +3,12 @@ import { usePageActions } from "./usePageActions";
 import { useDocumentActions } from "./useDocumentActions";
 import { useMediaActions } from "./useMediaActions";
 import { usePublishingActions } from "./usePublishingActions";
+import { useDocumentSelection } from "./useDocumentSelection";
 export function useWorkspace() {
   const state = useWorkspaceState();
   return {
     ...state,
+    ...useDocumentSelection(state),
     ...usePageActions(state),
     ...useDocumentActions(state),
     ...useMediaActions(state),

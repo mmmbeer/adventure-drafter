@@ -97,6 +97,8 @@ export async function capturePages(
       clone
         .querySelectorAll(".no-print,.column-resize-handle")
         .forEach((n) => n.remove());
+      clone.querySelectorAll(".document-selection-text,.document-selection-node")
+        .forEach((n) => n.classList.remove("document-selection-text", "document-selection-node"));
       clone.querySelectorAll(".resize-cursor")
         .forEach((n) => n.classList.remove("resize-cursor"));
       clone

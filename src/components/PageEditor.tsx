@@ -26,6 +26,8 @@ interface Props {
   onReclaim: (id: string, plan: BackflowPlan) => void;
   register: (id: string, editor: Editor | null) => void;
   report: (message: string) => void;
+  onSelection: (editor: Editor) => void;
+  onTextInput: (text: string) => boolean;
 }
 export function PageEditor({
   doc,
@@ -39,13 +41,15 @@ export function PageEditor({
   onReclaim,
   register,
   report,
+  onSelection,
+  onTextInput,
 }: Props) {
   const [overflow, setOverflow] = useState(false);
   const [oversized, setOversized] = useState(false);
   const paginationPending = useRef(false);
   const nextPage = doc.pages[index + 1];
-  const latest = useRef({ onChange, onFocus, onOverflow, onReclaim, page, nextPage, readOnly });
-  latest.current = { onChange, onFocus, onOverflow, onReclaim, page, nextPage, readOnly };
+  const latest = useRef({ onChange, onFocus, onOverflow, onReclaim, page, nextPage, readOnly, onSelection, onTextInput });
+  latest.current = { onChange, onFocus, onOverflow, onReclaim, page, nextPage, readOnly, onSelection, onTextInput };
   const container = useRef<HTMLDivElement>(null);
   const editor = useEditor({
     extensions: extensions(),
@@ -58,6 +62,7 @@ export function PageEditor({
         "data-page-id": page.id,
       },
       transformPastedHTML: cleanHtml,
+      handleTextInput: (_view, _from, _to, text) => latest.current.onTextInput(text),
       handlePaste: (_, event) => {
         const items = [...(event.clipboardData?.items ?? [])].filter((i) =>
           /^image\/(png|jpe?g|webp|gif)$/.test(i.type),
@@ -95,6 +100,7 @@ export function PageEditor({
         return true;
       },
     },
+    onSelectionUpdate: ({ editor }) => latest.current.onSelection(editor),
     onFocus: ({ editor }) => latest.current.onFocus(editor, page.id),
     onUpdate: ({ editor }) =>
       latest.current.onChange(page.id, editor.getJSON()),
@@ -123,6 +129,7 @@ export function PageEditor({
       timer = setTimeout(() => {
         if (!editor || editor.isDestroyed || paginationPending.current) return;
         const el = editor.view.dom;
+        if (el.dataset.documentSelected === "true") return;
         const spills =
           el.scrollWidth > el.clientWidth + 4 ||
           el.scrollHeight > el.clientHeight + 4;
@@ -345,3 +352,4 @@ export function PageEditor({
     </div>
   );
 }
+

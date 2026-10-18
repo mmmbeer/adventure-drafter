@@ -1,0 +1,17 @@
+.tiptap .document-selection-text {
+  background: #b5d2ef;
+  color: #182536;
+}
+.tiptap .document-selection-node {
+  outline: 2px solid #6997c4;
+  outline-offset: 1px;
+}
+@media print {
+  .tiptap .document-selection-text {
+    background: none;
+    color: inherit;
+  }
+  .tiptap .document-selection-node {
+    outline: none;
+  }
+}
