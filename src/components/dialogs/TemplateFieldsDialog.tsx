@@ -10,9 +10,12 @@ export function TemplateFieldsDialog({
 }: {
   node: JSONContent;
   onClose: () => void;
-  onSave: (fields: TemplateFields) => void;
+  onSave: (fields: TemplateFields, layout: { width: number; flow: string; wide: boolean }) => void;
 }) {
   const [fields, setFields] = useState<TemplateFields>(() => templateFields(node));
+  const [width, setWidth] = useState(Number(node.attrs?.width ?? 100));
+  const [flow, setFlow] = useState(String(node.attrs?.flow ?? "block"));
+  const [wide, setWide] = useState(!!node.attrs?.wide);
   const kind = node.attrs?.kind ?? "creature";
   const labels = templateLabels(kind);
   const set = (key: string, value: string) =>
@@ -45,8 +48,21 @@ export function TemplateFieldsDialog({
           );
         })}
       </div>
+      <div className="template-layout-controls">
+        <label>Box width · {width}%
+          <input type="range" min="20" max="100" value={width} onChange={(e) => setWidth(Number(e.target.value))} />
+        </label>
+        <label>Text flow
+          <select value={wide ? "block" : flow} disabled={wide} onChange={(e) => setFlow(e.target.value)}>
+            <option value="block">Separate block</option>
+            <option value="left">Wrap text on right</option>
+            <option value="right">Wrap text on left</option>
+          </select>
+        </label>
+        <label className="check"><input type="checkbox" checked={wide} onChange={(e) => setWide(e.target.checked)} /> Span all columns</label>
+      </div>
       <DialogActions>
-        <button className="primary" onClick={() => onSave(fields)}>Apply changes</button>
+        <button className="primary" onClick={() => onSave(fields, { width, flow: wide ? "block" : flow, wide })}>Apply changes</button>
       </DialogActions>
     </Modal>
   );
