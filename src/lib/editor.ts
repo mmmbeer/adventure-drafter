@@ -2,6 +2,8 @@ import {
   Node,
   Extension,
   mergeAttributes,
+  nodeInputRule,
+  nodePasteRule,
   type JSONContent,
 } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
@@ -27,6 +29,8 @@ import DOMPurify from "dompurify";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { TemplateNode } from "../components/TemplateNode";
 import { ImageNode } from "../components/ImageNode";
+import { MergeTagNode } from "../components/MergeTagNode";
+import { validMergeTag } from "./merge-tags";
 const Heading = Node.create({
   name: "heading",
   group: "block",
@@ -103,6 +107,42 @@ const StatBlock = Node.create({
       mergeAttributes(HTMLAttributes, { "data-statblock": "", "data-kind": HTMLAttributes.kind }),
       0,
     ];
+  },
+});
+const MergeTag = Node.create({
+  name: "mergeTag",
+  group: "inline",
+  inline: true,
+  atom: true,
+  selectable: false,
+  addAttributes() {
+    return { name: {
+      default: "title",
+      parseHTML: (e) => e.getAttribute("data-merge-tag") || "title",
+      renderHTML: (attrs) => ({ "data-merge-tag": attrs.name }),
+    } };
+  },
+  parseHTML() { return [{ tag: "span[data-merge-tag]" }]; },
+  renderHTML({ HTMLAttributes }) {
+    const name = validMergeTag(HTMLAttributes.name) ? HTMLAttributes.name : "title";
+    return ["span", mergeAttributes(HTMLAttributes, {
+      "data-merge-tag": name, class: "merge-tag",
+    }), `{${name}}`];
+  },
+  addNodeView() { return ReactNodeViewRenderer(MergeTagNode); },
+  addInputRules() {
+    return [nodeInputRule({
+      find: /\\{(title|subtitle|author|page|pages|footer)\\}$/,
+      type: this.type,
+      getAttributes: (match) => ({ name: match[1] }),
+    })];
+  },
+  addPasteRules() {
+    return [nodePasteRule({
+      find: /\\{(title|subtitle|author|page|pages|footer)\\}/g,
+      type: this.type,
+      getAttributes: (match) => ({ name: match[1] }),
+    })];
   },
 });
 const ColumnBreak = Node.create({
@@ -241,6 +281,7 @@ export function extensions() {
     }),
     Heading,
     AdventureImage,
+    MergeTag,
     Table.configure({ resizable: true }),
     TableRow,
     TableCell,
@@ -277,6 +318,7 @@ export function cleanHtml(html: string) {
       "data-keep",
       "data-template-field",
       "data-flow-group",
+      "data-merge-tag",
     ],
     FORBID_TAGS: [
       "style",
