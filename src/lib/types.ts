@@ -42,6 +42,8 @@ export interface Adventure {
     pageStart: number;
     footer: string;
     tocDepth: number;
+    autoIndexHeadings?: boolean;
+    indexDepth?: number;
   };
   indexTerms: string[];
   fonts: { name: string; data: string }[];

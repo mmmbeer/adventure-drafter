@@ -1,0 +1,17 @@
+/* Editor fields resemble text while remaining identifiable as dynamic values. */
+.tiptap .merge-tag {
+  display: inline;
+  white-space: normal;
+  padding: 0 1px;
+  border-bottom: 1px dotted color-mix(in srgb, var(--accent) 60%, transparent);
+  color: inherit;
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+  cursor: default;
+}
+.tiptap .merge-tag:hover {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+@media print {
+  .tiptap .merge-tag { background: transparent; border-bottom: 0; }
+}
+.export-stage .tiptap .merge-tag { background: transparent; border-bottom: 0; }

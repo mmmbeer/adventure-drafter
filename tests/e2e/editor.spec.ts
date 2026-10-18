@@ -15,6 +15,7 @@ test("page editing, templates, generated references, local save, backup and rest
   await editor.click();
   await page.keyboard.press("Control+End");
   await page.keyboard.type(" A secret about the Ember Archive.");
+  await page.getByRole("button", { name: "Style", exact: true }).click();
   await page.getByRole("button", { name: /Field notes/ }).click();
   await expect(editor).toContainText("A secret about the Ember Archive.");
   await page.getByRole("button", { name: "Add page", exact: true }).click();
@@ -132,7 +133,7 @@ test("clipboard image and high heading levels remain editable", async ({
     });
   await expect(page.locator(".canvas img")).toHaveCount(1);
   await page.locator(".canvas img").click();
-  await page.getByRole("button", { name: "Page", exact: true }).click();
+  await page.getByRole("button", { name: "Inspect", exact: true }).click();
   await page
     .getByRole("combobox", { name: "Text flow", exact: true })
     .selectOption("left");

@@ -20,7 +20,8 @@ import {
   ExternalHyperlink,
 } from "docx";
 import type { JSONContent } from "@tiptap/core";
-import { entries, keywordIndex, sizes, type Adventure } from "./model";
+import { entries, keywordIndex, sizes, pageNumber, type Adventure } from "./model";
+import { mergeValue, interpolateMergeTags } from "./merge-tags";
 import { download, filename } from "./export";
 export async function exportEditable(
   doc: Adventure,
@@ -31,6 +32,7 @@ export async function exportEditable(
   const accent = color(theme.accent);
   const ink = color(theme.ink);
   const sz = sizes[doc.settings.size];
+  let currentPage = doc.settings.pageStart;
   async function pngImage(url: string, opacity = 1) {
     const response = await fetch(url);
     if (!response.ok) throw new Error("Image unavailable");
@@ -62,6 +64,7 @@ export async function exportEditable(
   function runs(nodes: JSONContent[] = []): (TextRun | ExternalHyperlink)[] {
     return nodes.flatMap((n) => {
       if (n.type === "hardBreak") return [new TextRun({ break: 1 })];
+      if (n.type === "mergeTag") return [new TextRun(mergeValue(doc, n.attrs?.name || "", currentPage))];
       if (n.type !== "text") return runs(n.content);
       const m = (type: string) => n.marks?.find((m) => m.type === type);
       const run = new TextRun({
@@ -267,6 +270,7 @@ export async function exportEditable(
   for (let i = 0; i < doc.pages.length; i++) {
     progress(`Converting page ${i + 1}…`);
     const p = doc.pages[i];
+    currentPage = pageNumber(doc, i);
     let children: (Paragraph | Table)[] = [];
     if (p.kind === "toc") {
       children = [
@@ -353,7 +357,7 @@ export async function exportEditable(
             new Paragraph({
               alignment: AlignmentType.CENTER,
               children: [
-                new TextRun(`${doc.settings.footer || doc.author}   `),
+                new TextRun(`${interpolateMergeTags(doc.settings.footer || doc.author, doc, currentPage)}   `),
                 ...(!p.hideNumber && p.kind !== "title"
                   ? [new TextRun({ children: [PageNumber.CURRENT] })]
                   : []),

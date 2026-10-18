@@ -44,6 +44,8 @@ export function createAdventure(blank = false): Adventure {
       pageStart: 1,
       footer: "",
       tocDepth: 3,
+      autoIndexHeadings: true,
+      indexDepth: 3,
     },
     indexTerms: ["Blackwater", "Mara Voss", "Bellkeeper"],
     fonts: [],

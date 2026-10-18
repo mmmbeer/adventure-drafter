@@ -56,7 +56,7 @@ export function useMediaActions(state: WorkspaceState) {
           paragraph(),
         ])
         .run();
-      setTab("page");
+      setTab("inspect");
       setRightOpen(true);
     } else
       throw new Error("Click in a writing page before inserting an image.");

@@ -12,7 +12,7 @@ export function useWorkspaceState() {
     setActive,
   );
   const [editor, setEditor] = useState<Editor | null>(null);
-  const [tab, setTab] = useState("style");
+  const [tab, setTab] = useState("inspect");
   const [dialog, setDialog] = useState("");
   const [warnings, setWarnings] = useState<string[]>([]);
   const [zoom, setZoom] = useState(82);

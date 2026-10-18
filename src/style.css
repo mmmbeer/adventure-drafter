@@ -5,6 +5,7 @@
 @import "./styles/paper-frame.css";
 @import "./styles/paper-content.css";
 @import "./styles/layout-nodes.css";
+@import "./styles/merge-tags.css";
 @import "./styles/inspector.css";
 @import "./styles/dialogs.css";
 @import "./styles/feedback.css";
