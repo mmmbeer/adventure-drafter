@@ -8,11 +8,13 @@
   float: left;
   clear: left;
   margin: 8px 14px 9px 0;
+  max-width: calc(100% - 18px);
 }
 .tiptap .layout-node[data-flow="right"] {
   float: right;
   clear: right;
   margin: 8px 0 9px 14px;
+  max-width: calc(100% - 18px);
 }
 .tiptap .layout-node[data-wide="true"] {
   column-span: all;
