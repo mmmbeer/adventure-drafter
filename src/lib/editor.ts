@@ -24,6 +24,9 @@ import Typography from "@tiptap/extension-typography";
 import Superscript from "@tiptap/extension-superscript";
 import Subscript from "@tiptap/extension-subscript";
 import DOMPurify from "dompurify";
+import { ReactNodeViewRenderer } from "@tiptap/react";
+import { TemplateNode } from "../components/TemplateNode";
+import { ImageNode } from "../components/ImageNode";
 const Heading = Node.create({
   name: "heading",
   group: "block",
@@ -66,6 +69,9 @@ const Callout = Node.create({
   parseHTML() {
     return [{ tag: "aside[data-callout]" }];
   },
+  addNodeView() {
+    return ReactNodeViewRenderer(TemplateNode);
+  },
   renderHTML({ HTMLAttributes }) {
     return [
       "aside",
@@ -83,15 +89,18 @@ const StatBlock = Node.create({
   content: "block+",
   defining: true,
   addAttributes() {
-    return { kind: { default: "creature" } };
+    return { kind: { default: "creature", parseHTML: (e) => e.dataset.kind || "creature" } };
   },
   parseHTML() {
     return [{ tag: "section[data-statblock]" }];
   },
+  addNodeView() {
+    return ReactNodeViewRenderer(TemplateNode);
+  },
   renderHTML({ HTMLAttributes }) {
     return [
       "section",
-      mergeAttributes(HTMLAttributes, { "data-statblock": "" }),
+      mergeAttributes(HTMLAttributes, { "data-statblock": "", "data-kind": HTMLAttributes.kind }),
       0,
     ];
   },
@@ -114,6 +123,9 @@ export function safeImageUrl(value: string) {
   );
 }
 const AdventureImage = Image.extend({
+  addNodeView() {
+    return ReactNodeViewRenderer(ImageNode);
+  },
   addAttributes() {
     return {
       ...this.parent?.(),
@@ -151,12 +163,17 @@ const Layout = Extension.create({
   addGlobalAttributes() {
     return [
       {
-        types: ["paragraph", "heading", "callout", "statBlock", "table"],
+        types: ["paragraph", "heading", "callout", "statBlock", "table", "image"],
         attributes: {
           wide: {
             default: false,
             parseHTML: (e) => e.dataset.wide === "true",
             renderHTML: (a) => ({ "data-wide": String(a.wide) }),
+          },
+          templateField: {
+            default: null,
+            parseHTML: (e) => e.dataset.templateField || null,
+            renderHTML: (a) => a.templateField ? { "data-template-field": a.templateField } : {},
           },
           keep: {
             default: false,
@@ -186,6 +203,21 @@ const Layout = Extension.create({
             parseHTML: (e) => e.style.marginBottom || null,
             renderHTML: (a) =>
               a.spaceAfter ? { style: `margin-bottom:${a.spaceAfter}` } : {},
+          },
+        },
+      },
+      {
+        types: ["callout", "statBlock"],
+        attributes: {
+          width: {
+            default: 100,
+            parseHTML: (e) => Math.min(100, Math.max(20, Number(e.dataset.width) || 100)),
+            renderHTML: (a) => ({ "data-width": a.width, style: `width:${a.width}%` }),
+          },
+          flow: {
+            default: "block",
+            parseHTML: (e) => e.dataset.flow || "block",
+            renderHTML: (a) => ({ "data-flow": a.flow }),
           },
         },
       },
@@ -238,6 +270,7 @@ export function cleanHtml(html: string) {
       "data-level",
       "data-wide",
       "data-keep",
+      "data-template-field",
     ],
     FORBID_TAGS: [
       "style",
