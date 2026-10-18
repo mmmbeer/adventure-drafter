@@ -13,12 +13,13 @@ export function TemplateNode(props: NodeViewProps) {
   const kind = String(node.attrs.kind ?? "creature");
   const width = Number(node.attrs.width ?? 100);
   const flow = node.attrs.wide ? "block" : String(node.attrs.flow ?? "block");
-  const save = (fields: Record<string, string>) => {
+  const save = (fields: Record<string, string>, layout: { width: number; flow: string; wide: boolean }) => {
     const position = getPos();
     if (typeof position !== "number") return;
     const current = editor.state.doc.nodeAt(position);
     if (!current) return;
     const updated = patchTemplate(current.toJSON(), fields);
+    updated.attrs = { ...updated.attrs, ...layout };
     editor.chain().command(({ tr }) => {
       tr.replaceWith(position, position + current.nodeSize, editor.schema.nodeFromJSON(updated));
       return true;
