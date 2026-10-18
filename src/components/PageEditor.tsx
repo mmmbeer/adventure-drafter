@@ -2,6 +2,7 @@ import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { extensions, cleanHtml, splitNode } from "../lib/editor";
 import { dataUrl } from "../lib/fonts";
+import { interpolateMergeTags } from "../lib/merge-tags";
 import { planBackflow, type BackflowPlan } from "../lib/backflow";
 import {
   sizes,
@@ -320,7 +321,7 @@ export function PageEditor({
         </div>
       )}
       <footer className="page-footer">
-        <span>{doc.settings.footer || doc.author}</span>
+        <span>{interpolateMergeTags(doc.settings.footer || doc.author, doc, pageNumber(doc, index) + part)}</span>
         {!page.hideNumber && page.kind !== "title" && (
           <b>{pageNumber(doc, index) + part}</b>
         )}
