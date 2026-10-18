@@ -74,7 +74,7 @@ export function planBackflow(
         consumed++;
         continue;
       }
-      trial.remove();
+      trial.parentNode?.removeChild(trial);
       // The next paragraph may be longer than the available gap. Pull back
       // its largest fitting word-aligned prefix rather than leaving a void.
       const node = source[i];
