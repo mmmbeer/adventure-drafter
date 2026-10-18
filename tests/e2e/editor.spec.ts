@@ -214,6 +214,25 @@ test("pasted images, URL art, custom fonts and named versions survive a publishi
   );
   await expect(page.locator(".canvas img")).toHaveCount(1);
   await expect(page.locator(".page-background")).toHaveCount(1);
+  const diagnostics = await page.locator(".overflow-note").evaluateAll((elements) =>
+    elements.map((el) => {
+      const paper = el.closest(".paper");
+      const editor = paper?.querySelector(".tiptap");
+      return {
+        message: el.textContent,
+        page: paper?.getAttribute("data-page-id"),
+        kind: paper?.className,
+        width: [editor?.scrollWidth, editor?.clientWidth],
+        height: [editor?.scrollHeight, editor?.clientHeight],
+        children: [...(editor?.children ?? [])].map((child) => ({
+          tag: child.tagName,
+          overflow: child.getBoundingClientRect().right > (editor?.getBoundingClientRect().right ?? 0) + 2,
+          text: child.textContent?.slice(0, 55),
+        })),
+      };
+    }),
+  );
+  console.log("PAGINATION DIAGNOSTICS", JSON.stringify(diagnostics));
   await expect(page.locator(".overflow-note")).toHaveCount(0, { timeout: 30000 });
   await page.getByRole("button", { name: "Export", exact: true }).click();
   const download = page.waitForEvent("download", { timeout: 70000 });
