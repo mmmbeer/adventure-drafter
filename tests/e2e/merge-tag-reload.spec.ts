@@ -36,28 +36,47 @@ test("loaded fields stay live after reload and subsequent metadata changes", asy
 
 test("legacy saved literal fields become live on reload without affecting ordinary text", async ({ page }) => {
   await page.goto("/");
-  const editor = page.locator(".paper.body .tiptap").first();
-  await editor.click();
-  await page.keyboard.press("Control+End");
-  await page.keyboard.press("Enter");
-  // Simulate legacy content that was saved as plain text rather than a node.
-  await editor.evaluate((el) => {
-    const view = (el as HTMLElement & { pmViewDesc?: any }).pmViewDesc?.view;
-    if (view) {
-      const doc = view.state.doc.toJSON();
-      doc.content.push({
-        type: "paragraph",
-        content: [{ type: "text", text: "Author: {author}, title: {title}. And {unknown} remains." }],
-      });
-      view.dispatch(view.state.tr.replaceWith(0, view.state.doc.content.size,
-        view.state.schema.nodeFromJSON(doc).content));
-    }
+  await expect(page.locator(".save-status")).toHaveText("Saved on this device");
+  await page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open("adventure-drafter", 1);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const id = await new Promise<string>((resolve, reject) => {
+      const request = db.transaction("preferences").objectStore("preferences").get("last");
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const doc = await new Promise<any>((resolve, reject) => {
+      const request = db.transaction("documents").objectStore("documents").get(id);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    doc.pages.find((p: any) => p.kind === "body").content.content.push({
+      type: "paragraph",
+      content: [{
+        type: "text",
+        text: "Author: {author}, title: {title}. Page {page} of {pages}. And {unknown} remains.",
+      }],
+    });
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction("documents", "readwrite");
+      tx.objectStore("documents").put(doc);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+    db.close();
   });
-  await page.keyboard.press("Control+s");
-  await expect(page.getByRole("status")).toContainText("Saved on this device.");
   await page.reload();
   const target = page.locator(".paper.body .tiptap").first();
   await expect(target.locator('[data-merge-tag="author"]')).toHaveCount(1);
   await expect(target.locator('[data-merge-tag="title"]')).toHaveCount(1);
+  await expect(target.locator('[data-merge-tag="page"]')).toHaveCount(1);
+  await expect(target.locator('[data-merge-tag="page"]')).toHaveText("2");
+  await expect(target.locator('[data-merge-tag="pages"]')).toHaveText("3");
   await expect(target).toContainText("{unknown}");
+  await page.getByRole("button", { name: "Document", exact: true }).click();
+  await page.getByLabel("Document title").fill("Live Title");
+  await expect(target.locator('[data-merge-tag="title"]')).toHaveText("Live Title");
 });
