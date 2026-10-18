@@ -1,4 +1,4 @@
-import { Feather, Loader2, X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { Toolbar } from "./components/Toolbar";
 import { Inspector } from "./components/Inspector";
 import { WorkspaceHeader } from "./components/WorkspaceHeader";
@@ -35,7 +35,7 @@ export default function App() {
   if (!ready)
     return (
       <div className="boot">
-        <Feather />
+        <img className="boot-logo" src="/brand-mark.svg" alt="" aria-hidden="true" />
         <p>Opening your writing desk…</p>
       </div>
     );

@@ -134,6 +134,11 @@
     14px "Cormorant Garamond",
     serif;
 }
+.boot-logo {
+  width: 136px;
+  height: 94px;
+  object-fit: contain;
+}
 .preview-mode .canvas-toolbar {
   background: #e6e8e2f5;
 }

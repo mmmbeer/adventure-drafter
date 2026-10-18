@@ -1,5 +1,4 @@
 import {
-  Feather,
   FolderOpen,
   Download,
   Upload,
@@ -23,7 +22,7 @@ export function WorkspaceHeader() {
         }}
       >
         <span className="brand-icon">
-          <Feather size={23} />
+          <img src="/brand-mark.svg" width="72" height="46" alt="" aria-hidden="true" />
         </span>
         <span>
           Adventure<span className="brand-light">Drafter</span>
