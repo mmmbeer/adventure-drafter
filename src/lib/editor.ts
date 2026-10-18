@@ -313,6 +313,8 @@ export function splitNode(n: JSONContent): [JSONContent, JSONContent] | null {
       { ...n, type: n.type === "heading" ? "paragraph" : n.type, content: b },
     ];
   }
+  // Preserve semantic blocks and floated media as a unit across pages.
+  if (["statBlock", "callout", "image"].includes(n.type ?? "")) return null;
   const children = n.content ?? [];
   if (children.length < 2) return null;
   const cut = Math.ceil(children.length / 2);
