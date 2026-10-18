@@ -1,5 +1,6 @@
 import type { JSONContent } from "@tiptap/core";
 import type { Adventure } from "./types";
+import { physicalPageCount } from "./references";
 export const MERGE_TAGS = [
   { name: "title", label: "Adventure title" },
   { name: "subtitle", label: "Subtitle" },
@@ -18,15 +19,10 @@ export function mergeValue(doc: Adventure, name: string, page: number): string {
     case "subtitle": return doc.subtitle;
     case "author": return doc.author;
     case "page": return String(page);
-    case "pages": return String(doc.pages.reduce((count, item) => count + sheetCountSafe(doc, item), 0));
+    case "pages": return String(physicalPageCount(doc));
     case "footer": return doc.settings.footer || doc.author;
     default: return `{${name}}`;
   }
-}
-/** The full page-count computation is supplied by the caller to avoid cycles. */
-function sheetCountSafe(doc: Adventure, p: Adventure["pages"][number]) {
-  if (p.kind === "toc" || p.kind === "index") return 1;
-  return 1;
 }
 export function mergeNode(name: MergeTagName): JSONContent {
   return { type: "mergeTag", attrs: { name } };
