@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  abilityTable, makeTemplate, modifier, patchTemplate, templateFields,
+  abilityTable, makeTemplate, modifier, patchTemplate, templateFields, templateRichFields,
 } from "../src/lib/template-blocks";
 import { heading, paragraph } from "../src/lib/documents";
 
@@ -48,6 +48,38 @@ describe("semantic layout templates", () => {
     expect(JSON.stringify(updated)).not.toContain("STR 12 DEX 14");
     expect(templateFields(updated).dex).toBe("18");
     expect(updated.content?.filter((part) => part.type === "table")).toHaveLength(1);
+  });
+
+  it("round trips bold, italic and multi-paragraph actions without flattening marks", () => {
+    const block = makeTemplate("creature");
+    const rich = {
+      actions: [
+        { type: "paragraph", content: [
+          { type: "text", text: "Multiattack", marks: [{ type: "bold" }] },
+          { type: "text", text: ". Two attacks." },
+        ] },
+        { type: "paragraph", content: [
+          { type: "text", text: "Claw", marks: [{ type: "italic" }] },
+          { type: "text", text: ". Melee weapon attack." },
+        ] },
+      ],
+    };
+    const result = patchTemplate(block, templateFields(block), rich);
+    expect(templateRichFields(result).actions).toEqual(rich.actions);
+    expect(templateFields(result).actions).toContain("Claw");
+    const changed = patchTemplate(result, {
+      ...templateFields(result), armor: "Armor Class 17",
+    });
+    expect(templateRichFields(changed).actions).toEqual(rich.actions);
+  });
+
+  it("preserves untouched inline formatting when only another field changes", () => {
+    const node = makeTemplate("magicItem");
+    const description = node.content?.find((part) => part.attrs?.templateField === "description");
+    description!.content = [{ type: "text", text: "Rare magic", marks: [{ type: "bold" }] }];
+    const changed = patchTemplate(node, { ...templateFields(node), name: "Blackwater Sigil" });
+    const after = changed.content?.find((part) => part.attrs?.templateField === "description");
+    expect(after?.content?.[0].marks).toEqual([{ type: "bold" }]);
   });
 
   it("supports distinct magic item and callout layouts", () => {
