@@ -185,7 +185,7 @@ export function usePageActions(state: WorkspaceState) {
         ...d,
         indexTerms: [...new Set([...d.indexTerms, term])],
       }));
-      setTab("publish");
+      setTab("document");
       report(`“${term}” added to the index.`);
     }
   };
