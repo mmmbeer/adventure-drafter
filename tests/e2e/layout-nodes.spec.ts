@@ -15,6 +15,7 @@ test("template pencil preserves custom sections and updates six ability modifier
   await expect(creature.locator("table").first()).toContainText("18 (+4)");
   await expect(creature.locator("table th")).toHaveText(["STR", "DEX", "CON", "INT", "WIS", "CHA"]);
   await expect(creature.locator("table td").first()).toHaveCSS("text-align", "center");
+  await expect(page.locator(".save-status")).toHaveText("Saved on this device");
   await page.reload();
   await expect(page.locator("section[data-statblock]").first()).toContainText("The Revised Bellkeeper");
 });
