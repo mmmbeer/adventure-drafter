@@ -55,6 +55,7 @@ export function PageEditor({
       attributes: {
         "aria-label": `Page ${index + 1} writing area`,
         spellcheck: "true",
+        "data-page-id": page.id,
       },
       transformPastedHTML: cleanHtml,
       handlePaste: (_, event) => {
