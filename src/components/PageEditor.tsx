@@ -141,6 +141,13 @@ export function PageEditor({
         );
         if (spill < 0) spill = nodes.length - 1;
         spill = Math.min(spill, nodes.length - 1);
+        // Multicolumn scroll metrics sometimes find a trailing image without
+        // exposing an out-of-bounds child rect. Move that image with any empty
+        // paragraphs that follow it, rather than endlessly moving blank text.
+        while (
+          spill > 0 && nodes[spill].type === "paragraph" &&
+          !(nodes[spill].content ?? []).length
+        ) spill--;
         let remaining = nodes.slice(0, spill),
           moved = nodes.slice(spill);
         if (spill === 0) {
