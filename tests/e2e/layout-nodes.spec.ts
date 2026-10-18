@@ -37,6 +37,14 @@ test("template modal edits box width and flow, image can be resized from its cor
   await creature.hover();
   await creature.getByRole("button", { name: "Toggle column span" }).click();
   await expect(creature).toHaveAttribute("data-wide", "true");
+  const grip = creature.getByRole("button", { name: "Resize layout box" });
+  const handle = await grip.boundingBox();
+  expect(handle).not.toBeNull();
+  await page.mouse.move(handle!.x + handle!.width / 2, handle!.y + handle!.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(handle!.x - 65, handle!.y + handle!.height / 2, { steps: 5 });
+  await page.mouse.up();
+  await expect.poll(async () => Number(await creature.getAttribute("data-width"))).toBeLessThan(100);
 });
 
 test("long text pagination ends in stable continuation pages", async ({ page }) => {
