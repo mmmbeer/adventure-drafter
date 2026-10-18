@@ -1,0 +1,219 @@
+@media (min-width: 1650px) {
+  .navigator {
+    width: 250px;
+  }
+  .inspector {
+    width: 300px;
+  }
+  .app-header {
+    gap: 55px;
+  }
+}
+@media (max-width: 1250px) {
+  .canvas-hint {
+    display: none;
+  }
+  .app-header {
+    gap: 25px;
+    padding: 0 18px;
+  }
+  .navigator {
+    width: 205px;
+  }
+  .inspector {
+    width: 248px;
+  }
+  .brand {
+    font-size: 17px;
+  }
+  .brand small {
+    font-size: 6px;
+  }
+  .format-bar {
+    gap: 6px;
+  }
+  .format-group {
+    padding-right: 6px;
+  }
+}
+@media (max-width: 1000px) {
+  .navigator {
+    width: 180px;
+  }
+  .inspector {
+    width: 230px;
+  }
+  .header-actions {
+    gap: 2px;
+  }
+  .header-actions button span {
+    display: none;
+  }
+  .brand {
+    font-size: 16px;
+  }
+  .brand-icon {
+    width: 30px;
+  }
+  .app-header {
+    gap: 20px;
+  }
+  .app-footer > span:last-child {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .app-header {
+    height: 68px;
+    padding: 0 12px;
+    gap: 12px;
+  }
+  .brand > span:last-child {
+    display: none;
+  }
+  .document-title {
+    max-width: none;
+  }
+  .header-actions button {
+    padding: 7px;
+  }
+  .header-actions button.primary {
+    padding: 9px;
+  }
+  .navigator {
+    width: 165px;
+  }
+  .inspector {
+    position: absolute;
+    right: 0;
+    top: 116px;
+    bottom: 29px;
+    z-index: 9;
+    box-shadow: -4px 0 25px #22331a20;
+    width: 250px;
+  }
+  .canvas-toolbar {
+    padding: 0 12px;
+  }
+  .canvas-toolbar > div {
+    gap: 7px;
+  }
+  .canvas-toolbar > div > span {
+    font-size: 7px;
+    letter-spacing: 0.6px;
+  }
+  .app-footer {
+    padding: 0 8px;
+  }
+  .app-footer > span:first-child {
+    display: none;
+  }
+  .app-footer {
+    justify-content: center;
+  }
+  .guide {
+    grid-template-columns: 1fr;
+  }
+  .paper {
+    box-shadow: 0 2px 6px #2635241c;
+  }
+  .modal-content {
+    padding: 18px;
+  }
+  .page-card-title b {
+    font-size: 9px;
+  }
+  .page-mini {
+    width: 34px;
+    height: 46px;
+  }
+  .page-pick {
+    gap: 7px;
+    padding: 7px;
+  }
+  .navigator-doc {
+    padding: 12px;
+  }
+  .navigator-doc b {
+    font-size: 10px;
+  }
+  .navigator-bottom button {
+    font-size: 9px;
+  }
+  .page-actions {
+    opacity: 1;
+  }
+  .canvas {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+@media (max-width: 500px) {
+  .modal-footer {
+    padding: 12px;
+    gap: 6px;
+  }
+  .dialog-actions {
+    gap: 5px;
+  }
+  .dialog-actions button {
+    font-size: 10px;
+    padding: 7px 8px;
+  }
+  .modal-content {
+    padding: 16px;
+  }
+}
+@media print {
+  html,
+  body,
+  #root,
+  .app,
+  .workspace,
+  .desk {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: none !important;
+  }
+  .app-header,
+  .format-bar,
+  .navigator,
+  .inspector,
+  .app-footer,
+  .canvas-toolbar,
+  .end-mark,
+  .modal,
+  .toast,
+  .busy-overlay,
+  .no-print {
+    display: none !important;
+  }
+  .canvas {
+    display: block !important;
+    zoom: 1 !important;
+    width: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .page-stack {
+    display: contents !important;
+  }
+  .paper {
+    margin: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    break-after: page;
+    break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .paper:last-child {
+    break-after: auto;
+  }
+  .tiptap [data-column-break] {
+    border: none;
+  }
+}

@@ -1,0 +1,148 @@
+:root {
+  font-family: Inter, system-ui, sans-serif;
+  color: #303a35;
+  background: #e4e6e1;
+  font-synthesis: weight style;
+  --green: #344e40;
+  --line: #e1e4dd;
+  --muted: #7b847b;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: inherit;
+  border-radius: 5px;
+  padding: 8px 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 12px;
+  transition: background 0.12s;
+}
+button:hover {
+  background: #f0f3eb;
+  border-color: #b9c5b9;
+}
+button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #879e63;
+  outline-offset: 2px;
+}
+input,
+select,
+textarea {
+  min-width: 0;
+  border: 1px solid #dce1d8;
+  border-radius: 4px;
+  background: #fff;
+  color: #354037;
+  padding: 8px 9px;
+  font-size: 12px;
+}
+input[type="range"] {
+  padding: 5px 0;
+  accent-color: #4a634d;
+  width: 100%;
+}
+input[type="checkbox"] {
+  accent-color: #4a634d;
+}
+textarea {
+  resize: vertical;
+  width: 100%;
+  line-height: 1.55;
+}
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11px;
+  color: #727c71;
+  margin-bottom: 14px;
+}
+label input,
+label select {
+  color: #354037;
+  width: 100%;
+}
+button svg {
+  flex-shrink: 0;
+}
+.primary {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+.primary:hover {
+  background: #243e30;
+  border-color: #243e30;
+}
+.subtle {
+  background: transparent;
+  border-color: transparent;
+  color: #576d51;
+  padding-left: 0;
+  font-size: 11px;
+}
+.danger {
+  color: #fff;
+  background: #913d35;
+}
+.wide-button {
+  width: 100%;
+  justify-content: center;
+}
+.button-row {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  margin: 15px 0;
+}
+.field-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.field-pair label {
+  min-width: 0;
+}
+.help {
+  font-size: 10px;
+  line-height: 1.7;
+  color: #889082;
+}
+.small-tag {
+  background: #edf0e8;
+  padding: 3px 6px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 500;
+  color: #738268;
+  white-space: nowrap;
+}
+.field-error {
+  font-size: 11px !important;
+  color: #963e35 !important;
+  margin: 5px 0 12px !important;
+  line-height: 1.5;
+}

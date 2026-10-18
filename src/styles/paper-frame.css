@@ -1,0 +1,162 @@
+.paper {
+  width: var(--page-width);
+  height: var(--page-height);
+  position: relative;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  padding: var(--margin);
+  box-shadow:
+    0 4px 16px #2635241c,
+    0 1px 3px #2635241c;
+  font-family: var(--body-font), Georgia, serif;
+  font-size: var(--body-size);
+  line-height: var(--line-height);
+  isolation: isolate;
+}
+.paper.active {
+  outline: 1px solid #96aa80;
+  outline-offset: 5px;
+}
+.paper:before {
+  content: "";
+  position: absolute;
+  inset: 15px;
+  border: 1px solid color-mix(in srgb, var(--accent) 13%, transparent);
+  pointer-events: none;
+  z-index: -1;
+}
+.paper.title:after {
+  content: "✧";
+  font-family: Cinzel, serif;
+  position: absolute;
+  bottom: 110px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 35px;
+  color: var(--accent);
+  opacity: 0.55;
+  pointer-events: none;
+}
+.page-background {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  z-index: -1;
+  pointer-events: none;
+}
+.running-header {
+  position: absolute;
+  left: var(--margin);
+  right: var(--margin);
+  top: 23px;
+  display: flex;
+  justify-content: space-between;
+  font:
+    8px Inter,
+    sans-serif;
+  letter-spacing: 1.2px;
+  color: var(--accent);
+  opacity: 0.65;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+  padding-bottom: 8px;
+}
+.paper.title .running-header {
+  display: none;
+}
+.page-writing {
+  height: 100%;
+  position: relative;
+}
+.page-footer {
+  position: absolute;
+  bottom: 24px;
+  left: var(--margin);
+  right: var(--margin);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font:
+    9px Inter,
+    sans-serif;
+  color: var(--accent);
+  border-top: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  padding-top: 10px;
+  gap: 10px;
+}
+.page-footer span {
+  max-width: 40%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.page-footer b {
+  font-family: var(--heading-font), serif;
+  font-size: 13px;
+  font-weight: 500;
+}
+.paper.title .page-footer {
+  border: 0;
+  justify-content: center;
+  opacity: 0.65;
+}
+.paper.title .page-footer span:last-child {
+  display: none;
+}
+.generated h1 {
+  font-size: 2.4em;
+  margin: 0.2em 0 1em;
+}
+.eyebrow {
+  font:
+    9px Inter,
+    sans-serif;
+  letter-spacing: 2.5px;
+  color: var(--accent);
+}
+.toc-entry {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  margin: 0 0 10px;
+  font-size: 1em;
+  text-decoration: none;
+  color: var(--ink);
+  line-height: 1.35;
+  break-inside: avoid;
+}
+.toc-entry i {
+  flex: 1;
+  border-bottom: 1px dotted color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.toc-entry b {
+  font-weight: 400;
+  white-space: nowrap;
+  color: var(--accent);
+}
+.overflow-note {
+  position: absolute;
+  bottom: 5px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  background: #f3d5b2;
+  color: #70471d;
+  font:
+    9px Inter,
+    sans-serif;
+  padding: 4px;
+}
+.export-stage .paper {
+  box-shadow: none;
+}
+.toc-entry span {
+  max-width: 85%;
+  overflow-wrap: break-word;
+  font-size: 0.95em;
+}
+.generated .toc-entry {
+  min-height: 28px;
+}
