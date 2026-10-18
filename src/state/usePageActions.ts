@@ -8,6 +8,7 @@ import {
   type PageKind,
 } from "../lib/model";
 import type { WorkspaceState } from "./useWorkspaceState";
+import { appendFlow, type BackflowPlan } from "../lib/backflow";
 export function usePageActions(state: WorkspaceState) {
   const {
     doc,
@@ -79,6 +80,40 @@ export function usePageActions(state: WorkspaceState) {
         return { ...d, pages };
       }),
     [update],
+  );
+  const reclaim = useCallback(
+    (id: string, plan: BackflowPlan) => {
+      update((d) => {
+        const i = d.pages.findIndex((p) => p.id === id);
+        const prev = d.pages[i], source = d.pages[i + 1];
+        if (i < 0 || !prev || !source || source.id !== plan.sourceId ||
+            prev.kind !== "body" || source.kind !== "body" ||
+            source.continuedFrom !== id || source.breakBefore ||
+            JSON.stringify(prev.content.content ?? []) !== JSON.stringify(plan.before) ||
+            JSON.stringify(source.content.content ?? []) !== JSON.stringify(plan.source)) return d;
+        const pages = [...d.pages];
+        pages[i] = { ...prev, content: {
+          type: "doc", content: appendFlow(prev.content.content ?? [], plan.pulled),
+        } };
+        const tail = [
+          ...(plan.remainder ? [plan.remainder] : []),
+          ...(source.content.content ?? []).slice(plan.consumed),
+        ];
+        if (tail.length) {
+          pages[i + 1] = { ...source, content: { type: "doc", content: tail } };
+        } else {
+          pages.splice(i + 1, 1);
+          if (pages[i + 1]?.continuedFrom === source.id)
+            pages[i + 1] = { ...pages[i + 1], continuedFrom: id };
+        }
+        return { ...d, pages };
+      });
+      if (active === plan.sourceId &&
+          plan.consumed === plan.source.length && !plan.remainder) {
+        setActive(id);
+        setEditor(editors.current.get(id) ?? null);
+      }
+    }, [update, active, editors, setActive, setEditor],
   );
   const activePage = doc.pages.find((p) => p.id === active) ?? doc.pages[0];
   const goPage = (id: string) => {
@@ -196,6 +231,7 @@ export function usePageActions(state: WorkspaceState) {
     register,
     change,
     overflow,
+    reclaim,
     activePage,
     goPage,
     addPage,
