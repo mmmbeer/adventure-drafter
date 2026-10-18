@@ -20,6 +20,7 @@ export function PageCanvas() {
     register,
     change,
     overflow,
+    reclaim,
     activePage,
     addPage,
   } = useDesk();
@@ -84,6 +85,7 @@ export function PageCanvas() {
             onFocus={focus}
             onChange={change}
             onOverflow={overflow}
+            onReclaim={reclaim}
             register={register}
             report={report}
           />
