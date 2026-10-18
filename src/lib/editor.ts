@@ -140,8 +140,8 @@ const MergeTag = Node.create({
           if (text !== "}" || !view.editable) return false;
           const $from = view.state.doc.resolve(from);
           if (!$from.parent.isTextblock) return false;
-          const before = $from.parent.textBetween(0, $from.parentOffset, undefined, "\\uFFFC");
-          const match = /\\{(title|subtitle|author|page|pages|footer)$/.exec(before);
+          const before = $from.parent.textBetween(0, $from.parentOffset, undefined, "\uFFFC");
+          const match = /\{(title|subtitle|author|page|pages|footer)$/.exec(before);
           if (!match) return false;
           const node = view.state.schema.nodes.mergeTag.create({ name: match[1] });
           view.dispatch(view.state.tr.replaceWith(
