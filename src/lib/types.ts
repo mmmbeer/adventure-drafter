@@ -9,6 +9,8 @@ export interface Page {
   backgroundOpacity?: number;
   hideNumber?: boolean;
   breakBefore?: boolean;
+  /** Automatically paginated continuation of a preceding body page. */
+  continuedFrom?: string;
 }
 export interface Theme {
   id: string;
