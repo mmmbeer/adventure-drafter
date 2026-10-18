@@ -7,7 +7,7 @@
   scrollbar-width: thin;
 }
 .inspector-tabs {
-  height: 52px;
+  height: 48px;
   display: flex;
   border-bottom: 1px solid var(--line);
   position: sticky;
@@ -20,8 +20,10 @@
   border: 0;
   border-radius: 0;
   background: none;
-  font-size: 10px;
+  font-size: 9px;
   color: #8c9584;
+  padding: 4px 3px;
+  gap: 3px;
   gap: 6px;
 }
 .inspector-tabs button.current {
@@ -154,7 +156,7 @@
   padding: 7px;
 }
 .inspector-tabs button.inspector-close {
-  flex: 0 0 24px;
+  flex: 0 0 21px;
   padding: 4px;
 }
 .inspector-tabs button.inspector-close:hover {
