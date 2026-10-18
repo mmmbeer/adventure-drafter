@@ -1,9 +1,10 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import type { NodeViewProps } from "@tiptap/react";
 
 export function useNodeResize({ editor, node, updateAttributes }: Pick<NodeViewProps, "editor" | "node" | "updateAttributes">) {
   const cleanup = useRef<(() => void) | null>(null);
+  useEffect(() => () => cleanup.current?.(), []);
   const begin = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
     if (event.button !== 0) return;
     event.preventDefault();
