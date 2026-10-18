@@ -1,6 +1,7 @@
 import type { JSONContent } from "@tiptap/core";
 import type { Adventure, Page } from "./types";
 import { sizes } from "./templates";
+import { resolveText } from "./merge-tags";
 export function nodeText(node: JSONContent): string {
   if (node.type === "hardBreak") return "\n";
   return (
@@ -18,6 +19,21 @@ export function generatedCapacity(doc: Adventure) {
     ),
   );
 }
+export function referenceTerms(doc: Adventure): string[] {
+  const manual = doc.indexTerms.map((t) => t.trim()).filter(Boolean);
+  if (doc.settings.autoIndexHeadings === false) return [...new Set(manual)];
+  const headings = doc.pages
+    .filter((p) => p.kind === "body")
+    .flatMap((p) => p.content.content ?? [])
+    .filter((n) => n.type === "heading" &&
+      Number(n.attrs?.level ?? 1) <= (doc.settings.indexDepth ?? 3))
+    .map(nodeText).map((t) => t.trim()).filter((t) => !!t && t.length <= 100);
+  const unique = new Map<string, string>();
+  [...manual, ...headings].forEach((t) => {
+    if (!unique.has(t.toLocaleLowerCase())) unique.set(t.toLocaleLowerCase(), t);
+  });
+  return [...unique.values()];
+}
 export function sheetCount(doc: Adventure, p: Page) {
   const count =
     p.kind === "toc"
@@ -29,7 +45,7 @@ export function sheetCount(doc: Adventure, p: Page) {
               Number(n.attrs?.level ?? 1) <= doc.settings.tocDepth,
           ).length
       : p.kind === "index"
-        ? new Set(doc.indexTerms.map((t) => t.trim()).filter(Boolean)).size
+        ? referenceTerms(doc).length
         : 0;
   return Math.max(1, Math.ceil(count / generatedCapacity(doc)));
 }
@@ -50,7 +66,7 @@ export function entries(doc: Adventure) {
       n.type === "heading"
         ? [
             {
-              title: nodeText(n),
+              title: resolveText(n, doc, pageNumber(doc, i)),
               level: Number(n.attrs?.level ?? 1),
               page: pageNumber(doc, i),
               pageId: p.id,
@@ -62,15 +78,13 @@ export function entries(doc: Adventure) {
   );
 }
 export function keywordIndex(doc: Adventure) {
-  return [...new Set(doc.indexTerms.map((t) => t.trim()).filter(Boolean))]
-    .sort((a, b) => a.localeCompare(b))
+  return referenceTerms(doc).sort((a, b) => a.localeCompare(b))
     .map((term) => ({
       term,
       pages: doc.pages.flatMap((p, i) =>
         p.kind === "body" &&
-        nodeText(p.content)
-          .toLocaleLowerCase()
-          .includes(term.toLocaleLowerCase())
+        resolveText(p.content, doc, pageNumber(doc, i))
+          .toLocaleLowerCase().includes(term.toLocaleLowerCase())
           ? [pageNumber(doc, i)]
           : [],
       ),
