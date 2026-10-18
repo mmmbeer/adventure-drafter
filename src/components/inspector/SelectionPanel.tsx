@@ -237,6 +237,13 @@ export function SelectionPanel() {
       {editor?.isActive("table") && (
         <section className="panel-section">
           <h3>Selected table</h3>
+          <label className="check">
+            <input type="checkbox" checked={!!editor.getAttributes("table").wide}
+              onChange={(e) => editor.chain().focus().updateAttributes("table",
+                { wide: e.target.checked }).run()}/>
+            Full page width
+          </label>
+          <p className="help">Span all page columns. Drag a column edge to resize it.</p>
           <div className="button-grid">
             <button onClick={() => editor.chain().focus().addRowAfter().run()}>
               + Row
@@ -272,3 +279,4 @@ export function SelectionPanel() {
     </>
   );
 }
+

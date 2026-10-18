@@ -13,6 +13,7 @@ import {
   TableCell,
   TableHeader,
 } from "@tiptap/extension-table";
+import { AdventureTableView } from "../components/AdventureTableView";
 import TextAlign from "@tiptap/extension-text-align";
 import {
   TextStyle,
@@ -297,7 +298,7 @@ export function extensions() {
     Heading,
     AdventureImage,
     MergeTag,
-    Table.configure({ resizable: true }),
+    Table.configure({ resizable: true, View: AdventureTableView }),
     TableRow,
     TableCell,
     TableHeader,
@@ -400,3 +401,4 @@ export function splitNode(n: JSONContent): [JSONContent, JSONContent] | null {
     },
   ];
 }
+

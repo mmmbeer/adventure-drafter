@@ -282,15 +282,18 @@ export function Toolbar({
           label="Span all columns"
           active={
             editor?.isActive("paragraph", { wide: true }) ||
-            editor?.isActive("heading", { wide: true })
+            editor?.isActive("heading", { wide: true }) ||
+            editor?.isActive("table", { wide: true })
           }
           onClick={() => {
             if (editor) {
-              const name = editor.isActive("heading")
-                ? "heading"
-                : editor.isActive("statBlock")
-                  ? "statBlock"
-                  : "paragraph";
+              const name = editor.isActive("table")
+                ? "table"
+                : editor.isActive("heading")
+                  ? "heading"
+                  : editor.isActive("statBlock")
+                    ? "statBlock"
+                    : "paragraph";
               editor
                 .chain()
                 .focus()
@@ -350,3 +353,4 @@ export function Toolbar({
     </div>
   );
 }
+
