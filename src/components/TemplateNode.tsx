@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import { Columns2, Pencil, Grip } from "lucide-react";
 import { TemplateFieldsDialog } from "./dialogs/TemplateFieldsDialog";
-import { patchTemplate } from "../lib/template-blocks";
+import { patchTemplate, type RichTemplateFields } from "../lib/template-blocks";
 import { useNodeResize } from "./nodeResize";
 
 export function TemplateNode(props: NodeViewProps) {
@@ -13,12 +13,12 @@ export function TemplateNode(props: NodeViewProps) {
   const kind = String(node.attrs.kind ?? "creature");
   const width = Number(node.attrs.width ?? 100);
   const flow = node.attrs.wide ? "block" : String(node.attrs.flow ?? "block");
-  const save = (fields: Record<string, string>, layout: { width: number; flow: string; wide: boolean }) => {
+  const save = (fields: Record<string, string>, layout: { width: number; flow: string; wide: boolean }, rich: RichTemplateFields) => {
     const position = getPos();
     if (typeof position !== "number") return;
     const current = editor.state.doc.nodeAt(position);
     if (!current) return;
-    const updated = patchTemplate(current.toJSON(), fields);
+    const updated = patchTemplate(current.toJSON(), fields, rich);
     updated.attrs = { ...updated.attrs, ...layout };
     editor.chain().command(({ tr }) => {
       tr.replaceWith(position, position + current.nodeSize, editor.schema.nodeFromJSON(updated));
