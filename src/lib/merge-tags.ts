@@ -76,7 +76,7 @@ export function repairLegacyMergeTagArtifacts(node: JSONContent): JSONContent {
  */
 export function hydrateMergeTags(node: JSONContent): JSONContent {
   if (!node.content?.length || node.type === "codeBlock") return node;
-  const token = /\\{(title|subtitle|author|page|pages|footer)\\}/g;
+  const token = /\{(title|subtitle|author|page|pages|footer)\}/g;
   const content = node.content.flatMap((part): JSONContent[] => {
     if (part.type !== "text" || !part.text ||
         part.marks?.some((mark) => mark.type === "code")) {
