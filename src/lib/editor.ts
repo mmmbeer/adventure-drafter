@@ -2,7 +2,6 @@ import {
   Node,
   Extension,
   mergeAttributes,
-  nodeInputRule,
   nodePasteRule,
   type JSONContent,
 } from "@tiptap/core";
@@ -26,6 +25,7 @@ import Typography from "@tiptap/extension-typography";
 import Superscript from "@tiptap/extension-superscript";
 import Subscript from "@tiptap/extension-subscript";
 import DOMPurify from "dompurify";
+import { Plugin } from "@tiptap/pm/state";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { TemplateNode } from "../components/TemplateNode";
 import { ImageNode } from "../components/ImageNode";
@@ -130,18 +130,33 @@ const MergeTag = Node.create({
     }), `{${name}}`];
   },
   addNodeView() { return ReactNodeViewRenderer(MergeTagNode); },
-  addInputRules() {
-    return [nodeInputRule({
-      find: /\{(title|subtitle|author|page|pages|footer)\}$/,
-      type: this.type,
-      getAttributes: (match) => ({ name: match[1] }),
+  addProseMirrorPlugins() {
+    return [new Plugin({
+      props: {
+        handleTextInput(view, from, to, text) {
+          // Input rules run before the final '}' reaches the document.
+          // For inline atoms, nodeInputRule inserts a node without reliably
+          // deleting the source token. Consume the entire pending token here.
+          if (text !== "}" || !view.editable) return false;
+          const $from = view.state.doc.resolve(from);
+          if (!$from.parent.isTextblock) return false;
+          const before = $from.parent.textBetween(0, $from.parentOffset, undefined, "\uFFFC");
+          const match = /\{(title|subtitle|author|page|pages|footer)$/.exec(before);
+          if (!match) return false;
+          const node = view.state.schema.nodes.mergeTag.create({ name: match[1] });
+          view.dispatch(view.state.tr.replaceWith(
+            from - match[0].length, to, node,
+          ).scrollIntoView());
+          return true;
+        },
+      },
     })];
   },
   addPasteRules() {
     return [nodePasteRule({
-      find: /\{(title|subtitle|author|page|pages|footer)\}/g,
+      find: /\{(?:title|subtitle|author|page|pages|footer)\}/g,
       type: this.type,
-      getAttributes: (match) => ({ name: match[1] }),
+      getAttributes: (match) => ({ name: match[0].slice(1, -1) }),
     })];
   },
 });

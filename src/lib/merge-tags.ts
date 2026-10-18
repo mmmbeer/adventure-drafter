@@ -38,3 +38,33 @@ export function interpolateMergeTags(value: string, doc: Adventure, page: number
   return value.replace(/\{(title|subtitle|author|page|pages|footer)\}/g,
     (_, name: string) => mergeValue(doc, name, page));
 }
+
+/**
+ * Previous versions of the typing rule replaced only the capture group.
+ * They persisted literal "{author}" + the merge node + "}}" together.
+ * Repair only that exact fingerprint so intentional braces remain untouched.
+ */
+export function repairLegacyMergeTagArtifacts(node: JSONContent): JSONContent {
+  if (!node.content?.length) return node;
+  const children = node.content.map(repairLegacyMergeTagArtifacts);
+  const fixed: JSONContent[] = [];
+  for (let i = 0; i < children.length; i++) {
+    const current = children[i];
+    const before = fixed.at(-1);
+    const after = children[i + 1];
+    const name = current.attrs?.name;
+    const token = `{${name}}`;
+    if (current.type === "mergeTag" && validMergeTag(name) &&
+        before?.type === "text" && before.text?.endsWith(token) &&
+        after?.type === "text" && after.text?.startsWith("}}")) {
+      const prefix = before.text.slice(0, -token.length);
+      if (prefix) fixed[fixed.length - 1] = { ...before, text: prefix };
+      else fixed.pop();
+      fixed.push(current);
+      const suffix = after.text.slice(2);
+      if (suffix) children[i + 1] = { ...after, text: suffix };
+      else i++;
+    } else fixed.push(current);
+  }
+  return { ...node, content: fixed };
+}

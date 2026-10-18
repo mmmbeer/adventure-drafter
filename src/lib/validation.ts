@@ -1,6 +1,7 @@
 import type { Adventure } from "./types";
 import { sizes, themes } from "./templates";
 import { createAdventure, uid } from "./documents";
+import { repairLegacyMergeTagArtifacts } from "./merge-tags";
 export function validateAdventure(value: unknown): Adventure {
   const d = value as Adventure;
   if (
@@ -26,6 +27,8 @@ export function validateAdventure(value: unknown): Adventure {
       !Array.isArray(p.content.content)
     )
       throw new Error("The project contains an invalid page.");
+    // Normalize historical merge-field input corruption on load/import.
+    p.content = repairLegacyMergeTagArtifacts(p.content);
     if (!p.id || ids.has(p.id)) p.id = uid();
     ids.add(p.id);
   }

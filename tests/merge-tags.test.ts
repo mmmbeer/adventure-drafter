@@ -3,12 +3,35 @@ import { describe, expect, it } from "vitest";
 import { generateHTML, generateJSON } from "@tiptap/core";
 import {
   createAdventure, heading, page, paragraph, entries, keywordIndex,
-  physicalPageCount, sheetCount,
+  physicalPageCount, sheetCount, validateAdventure,
 } from "../src/lib/model";
 import { extensions } from "../src/lib/editor";
-import { mergeNode, mergeValue, interpolateMergeTags, resolveText } from "../src/lib/merge-tags";
+import { mergeNode, mergeValue, interpolateMergeTags, resolveText, repairLegacyMergeTagArtifacts } from "../src/lib/merge-tags";
 
 describe("dynamic merge tags and automatic references", () => {
+  it("repairs only the legacy duplicated-token-and-braces signature", () => {
+    const d = createAdventure(true);
+    d.pages = [page("body", [
+      { type: "paragraph", content: [
+        { type: "text", text: "Written by {author}" },
+        mergeNode("author"),
+        { type: "text", text: "}} in {title}" },
+        mergeNode("title"),
+        { type: "text", text: "}}." },
+      ] },
+      paragraph("Literal }} braces are untouched."),
+    ])];
+    const repaired = validateAdventure(d);
+    const blocks = repaired.pages[0].content.content!;
+    expect(resolveText(blocks[0], repaired, 1)).toBe(
+      "Written by Your name in Untitled adventure.",
+    );
+    expect(resolveText(blocks[1], repaired, 1)).toBe(
+      "Literal }} braces are untouched.",
+    );
+    expect(repairLegacyMergeTagArtifacts(blocks[0])).toEqual(blocks[0]);
+  });
+
   it("keeps merge tags structured while resolving current document metadata", () => {
     const doc = createAdventure(true);
     doc.title = "A Changing Title";
