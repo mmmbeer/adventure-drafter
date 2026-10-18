@@ -142,7 +142,7 @@ export function templateRichFields(node: JSONContent): RichTemplateFields {
     if (!allowed.has(key)) return;
     const attrs = { ...(part.attrs ?? {}) };
     delete attrs.templateField;
-    (result[key] ??= []).push({ ...part, attrs });
+    (result[key] ??= []).push({ ...part, attrs: Object.keys(attrs).length ? attrs : undefined });
   });
   return result;
 }
