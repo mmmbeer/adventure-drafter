@@ -163,7 +163,7 @@ const Layout = Extension.create({
   addGlobalAttributes() {
     return [
       {
-        types: ["paragraph", "heading", "callout", "statBlock", "table", "image"],
+        types: ["paragraph", "heading", "callout", "statBlock", "table", "image", "bulletList", "orderedList"],
         attributes: {
           wide: {
             default: false,
