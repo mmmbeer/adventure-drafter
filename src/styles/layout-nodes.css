@@ -98,16 +98,19 @@
 }
 .tiptap .node-resize {
   position: absolute;
-  bottom: 0;
-  right: 0;
+  bottom: 1px;
+  right: 1px;
   z-index: 5;
   cursor: nwse-resize;
-  border: 1px solid #afbea6;
-  border-right: 0;
-  border-bottom: 0;
   opacity: 0;
   pointer-events: none;
   touch-action: none;
+  background: color-mix(in srgb, var(--paper) 78%, transparent);
+}
+.tiptap .node-resize svg {
+  transform: rotate(45deg);
+  stroke-width: 1.5;
+  opacity: 0.8;
 }
 .tiptap .layout-node:hover > .node-tools,
 .tiptap .layout-node:hover > .node-resize,
@@ -150,3 +153,37 @@
 .tiptap section[data-statblock] table:first-of-type th,
 .tiptap section[data-statblock] table:first-of-type td { text-align: center; }
 .tiptap section[data-statblock] table:first-of-type p { text-align: center; }
+
+/* Compact TipTap editors use the same formatting model without page styling. */
+.template-single-field { display: flex; flex-direction: column; min-width: 0; }
+.template-single-field > label { font-size: 11px; margin-bottom: 5px; }
+.template-field-grid .template-rich-field { min-width: 0; margin: 0; }
+.template-rich-label { font-size: 11px; font-weight: 600; margin-bottom: 5px; }
+.template-rich-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  background: #eff2e9;
+  padding: 3px 4px;
+}
+.template-rich-toolbar .tool { min-width: 26px; min-height: 26px; padding: 4px; }
+.template-rich-divider { width: 1px; height: 18px; background: #bbc7b4; margin: 0 4px; }
+.template-rich-body { border: 1px solid var(--line); background: #fff; }
+.template-rich-body .tiptap {
+  min-height: 94px;
+  max-height: 250px;
+  padding: 9px 11px;
+  overflow-y: auto;
+  outline: none;
+  color: #263021;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.template-rich-body .tiptap:focus { box-shadow: inset 0 0 0 1px #899e7d; }
+.template-rich-body .tiptap p { margin: 0 0 .5em; color: inherit; font-size: inherit; line-height: inherit; }
+.template-rich-body .tiptap ul,
+.template-rich-body .tiptap ol { padding-left: 22px; margin: 0 0 .5em; }
+.template-rich-body .tiptap li { font-size: inherit; margin: 0; }

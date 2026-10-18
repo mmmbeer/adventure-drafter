@@ -5,6 +5,7 @@ export const abilities = ["STR", "DEX", "CON", "INT", "WIS", "CHA"] as const;
 const baseScores = [10, 10, 10, 10, 10, 10];
 export type TemplateKind = "creature" | "magicItem" | "readaloud" | "aside" | "encounter" | "treasure";
 export type TemplateFields = Record<string, string>;
+export type RichTemplateFields = Record<string, JSONContent[]>;
 
 function field(node: JSONContent, key: string): JSONContent {
   return { ...node, attrs: { ...node.attrs, templateField: key } };
@@ -109,7 +110,8 @@ export function templateFields(node: JSONContent): TemplateFields {
   const values: TemplateFields = {};
   (node.content ?? []).forEach((part, index) => {
     const key = role(part, index, kind, node.content ?? []);
-    if (key && key !== "abilities") values[key] = nodeText(part);
+    if (key && key !== "abilities")
+      values[key] = values[key] ? `${values[key]}\n${nodeText(part)}` : nodeText(part);
     if (key === "abilities") {
       (part.content?.[1]?.content ?? []).forEach((cell, i) => {
         if (abilities[i]) values[abilities[i].toLowerCase()] = String(score(nodeText(cell)));
@@ -130,20 +132,47 @@ export function templateFields(node: JSONContent): TemplateFields {
   }
   return values;
 }
-export function patchTemplate(node: JSONContent, values: TemplateFields): JSONContent {
+/** Load formatted field blocks, including paragraphs added by the modal. */
+export function templateRichFields(node: JSONContent): RichTemplateFields {
+  const kind = node.attrs?.kind ?? "creature";
+  const allowed = new Set(templateLabels(kind).filter((item) => item.multiline).map((item) => item.key));
+  const result: RichTemplateFields = {};
+  (node.content ?? []).forEach((part, index) => {
+    const key = role(part, index, kind, node.content ?? []);
+    if (!allowed.has(key)) return;
+    const attrs = { ...(part.attrs ?? {}) };
+    delete attrs.templateField;
+    const { attrs: _fieldAttrs, ...clean } = part;
+    (result[key] ??= []).push(Object.keys(attrs).length ? { ...clean, attrs } : clean);
+  });
+  return result;
+}
+
+export function patchTemplate(
+  node: JSONContent, values: TemplateFields, rich: RichTemplateFields = {},
+): JSONContent {
   const kind = node.attrs?.kind ?? "creature";
   const seen = new Set<string>();
+  const original = templateFields(node);
   const nodes: JSONContent[] = [];
   (node.content ?? []).forEach((part, index) => {
     const key = role(part, index, kind, node.content ?? []);
     if (key === "oldAbilities") return;
-    if (key === "abilities" && kind === "creature") {
+    if (rich[key]) {
+      // Multiple formatted paragraphs/lists share the same semantic field.
+      // Replace the entire field only once, retaining unrelated custom blocks.
+      if (!seen.has(key)) nodes.push(...rich[key].map((block) => field(block, key)));
+      seen.add(key);
+    } else if (key === "abilities" && kind === "creature") {
       seen.add(key);
       nodes.push(abilityTable(values));
     } else if (key && values[key] !== undefined) {
+      // Preserve every formatted paragraph belonging to an unchanged field.
+      // Only consolidate multiple blocks when the user changes the plain value.
+      if (original[key] === values[key]) nodes.push(part);
+      else if (!seen.has(key))
+        nodes.push(field({ ...part, content: values[key] ? [text(values[key])] : [] }, key));
       seen.add(key);
-      // Replacing only standard fields leaves custom sections and paragraphs intact.
-      nodes.push(field({ ...part, content: values[key] ? [text(values[key])] : [] }, key));
     } else nodes.push(part);
   });
   const required = kind === "creature"
@@ -161,9 +190,9 @@ export function patchTemplate(node: JSONContent, values: TemplateFields): JSONCo
         (name === "name" && part.type === "heading" && nodes.indexOf(part) === 0))
     ).find((index) => index !== -1);
     const at = anchor === undefined ? Math.min(nodes.length, 2) : anchor + 1;
-    nodes.splice(at, 0, key === "abilities"
-      ? abilityTable(values)
-      : field(paragraph(values[key]), key));
+    nodes.splice(at, 0, ...(rich[key]
+      ? rich[key].map((block) => field(block, key))
+      : [key === "abilities" ? abilityTable(values) : field(paragraph(values[key]), key)]));
     seen.add(key);
   }
   return { ...node, content: nodes };

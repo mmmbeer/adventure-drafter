@@ -1,18 +1,21 @@
 import { useState } from "react";
 import { DialogActions, Modal } from "../Modal";
 import {
-  abilities, modifier, templateFields, templateLabels, type TemplateFields,
+  abilities, modifier, templateFields, templateLabels, templateRichFields,
+  type TemplateFields, type RichTemplateFields,
 } from "../../lib/template-blocks";
 import type { JSONContent } from "@tiptap/core";
+import { TemplateRichField } from "./TemplateRichField";
 
 export function TemplateFieldsDialog({
   node, onClose, onSave,
 }: {
   node: JSONContent;
   onClose: () => void;
-  onSave: (fields: TemplateFields, layout: { width: number; flow: string; wide: boolean }) => void;
+  onSave: (fields: TemplateFields, layout: { width: number; flow: string; wide: boolean }, rich: RichTemplateFields) => void;
 }) {
   const [fields, setFields] = useState<TemplateFields>(() => templateFields(node));
+  const [rich, setRich] = useState<RichTemplateFields>(() => templateRichFields(node));
   const [width, setWidth] = useState(Number(node.attrs?.width ?? 100));
   const [flow, setFlow] = useState(String(node.attrs?.flow ?? "block"));
   const [wide, setWide] = useState(!!node.attrs?.wide);
@@ -31,12 +34,17 @@ export function TemplateFieldsDialog({
         {labels.map(({ key, label, multiline }) => {
           const ability = abilities.some((name) => name.toLowerCase() === key);
           return (
-            <label className={multiline ? "template-field-full" : ""} key={key}>
-              {label}{ability && <small> {modifier(fields[key] || "10")}</small>}
+            <div className={multiline ? "template-field-full" : "template-single-field"} key={key}>
+              {!multiline && <label htmlFor={`template-${key}`}>{label}{ability && <small> {modifier(fields[key] || "10")}</small>}</label>}
               {multiline ? (
-                <textarea rows={3} value={fields[key] || ""} onChange={(e) => set(key, e.target.value)} />
+                <TemplateRichField
+                  label={label}
+                  initial={rich[key] ?? [{ type: "paragraph", content: fields[key] ? [{ type: "text", text: fields[key] }] : [] }]}
+                  onChange={(blocks) => setRich((current) => ({ ...current, [key]: blocks }))}
+                />
               ) : (
                 <input
+                  id={`template-${key}`}
                   value={fields[key] || ""}
                   type={ability ? "number" : "text"}
                   min={ability ? 1 : undefined}
@@ -44,7 +52,7 @@ export function TemplateFieldsDialog({
                   onChange={(e) => set(key, e.target.value)}
                 />
               )}
-            </label>
+            </div>
           );
         })}
       </div>
@@ -62,7 +70,7 @@ export function TemplateFieldsDialog({
         <label className="check"><input type="checkbox" checked={wide} onChange={(e) => setWide(e.target.checked)} /> Span all columns</label>
       </div>
       <DialogActions>
-        <button className="primary" onClick={() => onSave(fields, { width, flow: wide ? "block" : flow, wide })}>Apply changes</button>
+        <button className="primary" onClick={() => onSave(fields, { width, flow: wide ? "block" : flow, wide }, rich)}>Apply changes</button>
       </DialogActions>
     </Modal>
   );

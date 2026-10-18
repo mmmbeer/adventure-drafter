@@ -163,12 +163,17 @@ const Layout = Extension.create({
   addGlobalAttributes() {
     return [
       {
-        types: ["paragraph", "heading", "callout", "statBlock", "table", "image"],
+        types: ["paragraph", "heading", "callout", "statBlock", "table", "image", "bulletList", "orderedList"],
         attributes: {
           wide: {
             default: false,
             parseHTML: (e) => e.dataset.wide === "true",
             renderHTML: (a) => ({ "data-wide": String(a.wide) }),
+          },
+          flowGroup: {
+            default: null,
+            parseHTML: (e) => e.dataset.flowGroup || null,
+            renderHTML: (a) => a.flowGroup ? { "data-flow-group": a.flowGroup } : {},
           },
           templateField: {
             default: null,
@@ -271,6 +276,7 @@ export function cleanHtml(html: string) {
       "data-wide",
       "data-keep",
       "data-template-field",
+      "data-flow-group",
     ],
     FORBID_TAGS: [
       "style",
@@ -308,9 +314,11 @@ export function splitNode(n: JSONContent): [JSONContent, JSONContent] | null {
       } else a.push(c);
       used += length;
     }
+    const flowGroup = n.attrs?.flowGroup || crypto.randomUUID();
     return [
-      { ...n, content: a },
-      { ...n, type: n.type === "heading" ? "paragraph" : n.type, content: b },
+      { ...n, attrs: { ...n.attrs, flowGroup }, content: a },
+      { ...n, attrs: { ...n.attrs, flowGroup },
+        type: n.type === "heading" ? "paragraph" : n.type, content: b },
     ];
   }
   // Preserve semantic blocks and floated media as a unit across pages.

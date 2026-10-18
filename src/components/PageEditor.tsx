@@ -2,6 +2,7 @@ import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { extensions, cleanHtml, splitNode } from "../lib/editor";
 import { dataUrl } from "../lib/fonts";
+import { planBackflow, type BackflowPlan } from "../lib/backflow";
 import {
   sizes,
   entries,
@@ -21,6 +22,7 @@ interface Props {
   onFocus: (editor: Editor | null, id: string) => void;
   onChange: (id: string, content: JSONContent) => void;
   onOverflow: (id: string, nodes: JSONContent[], cursor?: number) => void;
+  onReclaim: (id: string, plan: BackflowPlan) => void;
   register: (id: string, editor: Editor | null) => void;
   report: (message: string) => void;
 }
@@ -33,14 +35,16 @@ export function PageEditor({
   onFocus,
   onChange,
   onOverflow,
+  onReclaim,
   register,
   report,
 }: Props) {
   const [overflow, setOverflow] = useState(false);
   const [oversized, setOversized] = useState(false);
   const paginationPending = useRef(false);
-  const latest = useRef({ onChange, onFocus, onOverflow, page, readOnly });
-  latest.current = { onChange, onFocus, onOverflow, page, readOnly };
+  const nextPage = doc.pages[index + 1];
+  const latest = useRef({ onChange, onFocus, onOverflow, onReclaim, page, nextPage, readOnly });
+  latest.current = { onChange, onFocus, onOverflow, onReclaim, page, nextPage, readOnly };
   const container = useRef<HTMLDivElement>(null);
   const editor = useEditor({
     extensions: extensions(),
@@ -122,13 +126,25 @@ export function PageEditor({
           el.scrollHeight > el.clientHeight + 4;
         setOverflow(spills);
         setOversized(false);
-        if (
-          !spills ||
-          latest.current.readOnly ||
-          page.kind !== "body" ||
-          editor.view.composing
-        )
-          return;
+        if (!spills && !latest.current.readOnly &&
+            page.kind === "body" && !editor.view.composing) {
+          const next = latest.current.nextPage;
+          if (next?.kind === "body" && next.continuedFrom === page.id &&
+              !next.breakBefore && !next.background) {
+            const nextDom = document.querySelector<HTMLElement>(
+              `.paper[data-page-id="${next.id}"] .page-writing .tiptap`,
+            );
+            if (nextDom && !nextDom.contains(document.activeElement)) {
+              const plan = planBackflow(
+                el, nextDom, editor.getJSON().content ?? [],
+                next.content.content ?? [], next.id, editor.schema,
+              );
+              if (plan) latest.current.onReclaim(page.id, plan);
+            }
+          }
+        }
+        if (!spills || latest.current.readOnly ||
+            page.kind !== "body" || editor.view.composing) return;
         const nodes: JSONContent[] =
           (editor.getJSON() as JSONContent).content ?? [];
         if (!nodes.length) return;
@@ -196,7 +212,7 @@ export function PageEditor({
       editor.off("update", check);
       resize.disconnect();
     };
-  }, [editor, doc.settings, page.content, page.kind]);
+  }, [editor, doc.settings, page.content, page.kind, nextPage?.content, nextPage?.id, nextPage?.continuedFrom, readOnly]);
   const size = sizes[doc.settings.size];
   const style = {
     "--page-width": `${size.width}px`,

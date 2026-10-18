@@ -1,5 +1,5 @@
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
-import { Columns2, Grip } from "lucide-react";
+import { Columns2, ChevronDown } from "lucide-react";
 import { useNodeResize } from "./nodeResize";
 
 export function ImageNode(props: NodeViewProps) {
@@ -29,7 +29,7 @@ export function ImageNode(props: NodeViewProps) {
           <div className="node-tools no-print" contentEditable={false}>
             <button title={wide ? "Use one column" : "Span all columns"} aria-label="Toggle image column span" type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => updateAttributes({ wide: !wide, width: 100, flow: "block" })}><Columns2 size={14} /></button>
           </div>
-          <button className="node-resize no-print" aria-label="Resize image" title="Drag to resize. Drag beyond the column to span both columns." contentEditable={false} onPointerDown={resize}><Grip size={16}/></button>
+          <button className="node-resize no-print" aria-label="Resize image" title="Drag to resize. Drag beyond the column to span both columns." contentEditable={false} onPointerDown={resize}><ChevronDown size={16}/></button>
         </>
       )}
     </NodeViewWrapper>
