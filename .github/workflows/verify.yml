@@ -2,7 +2,7 @@ name: Editor verification
 
 on:
   push:
-    branches: [main, feat/template-editors-layout-pagination]
+    branches: [main]
   pull_request:
 
 permissions:
