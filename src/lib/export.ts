@@ -95,8 +95,10 @@ export async function capturePages(
       const clone = pages[i].cloneNode(true) as HTMLElement;
       clone.classList.remove("active");
       clone
-        .querySelectorAll(".no-print,.resize-cursor,.column-resize-handle")
+        .querySelectorAll(".no-print,.column-resize-handle")
         .forEach((n) => n.remove());
+      clone.querySelectorAll(".resize-cursor")
+        .forEach((n) => n.classList.remove("resize-cursor"));
       clone
         .querySelectorAll(".ProseMirror-selectednode")
         .forEach((n) => n.classList.remove("ProseMirror-selectednode"));
