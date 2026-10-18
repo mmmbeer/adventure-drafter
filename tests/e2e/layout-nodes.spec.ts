@@ -8,7 +8,7 @@ test("template pencil preserves custom sections and updates six ability modifier
   await creature.getByRole("button", { name: "Edit template fields" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.getByLabel("Creature name").fill("The Revised Bellkeeper");
-  await page.getByLabel("STR", { exact: false }).fill("18");
+  await page.getByRole("dialog").getByRole("spinbutton", { name: /^STR/ }).fill("18");
   await page.getByRole("button", { name: "Apply changes" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(creature).toContainText("The Revised Bellkeeper");
