@@ -83,7 +83,7 @@ function nodeText(node: JSONContent): string {
   if (node.text) return node.text;
   return (node.content ?? []).map(nodeText).join(" ");
 }
-function role(node: JSONContent, index: number, kind: string): string {
+function role(node: JSONContent, index: number, kind: string, siblings: JSONContent[]): string {
   if (node.attrs?.templateField) return node.attrs.templateField;
   if (node.type === "table" && kind === "creature") return "abilities";
   if (index === 0 && node.type === "heading") return "name";
@@ -91,6 +91,9 @@ function role(node: JSONContent, index: number, kind: string): string {
     return ["", "classification", "attunement", "description"][index] ?? "";
   if (kind !== "creature") return ["", "body"][index] ?? "";
   if (index === 1) return "classification";
+  const before = index ? nodeText(siblings[index - 1]).trim().toLowerCase() : "";
+  if (before === "traits") return "traits";
+  if (before === "actions") return "actions";
   const value = nodeText(node).toLowerCase();
   if (value.startsWith("armor class")) return "armor";
   if (value.startsWith("hit points")) return "hitPoints";
@@ -105,7 +108,7 @@ export function templateFields(node: JSONContent): TemplateFields {
   const kind = node.attrs?.kind ?? "creature";
   const values: TemplateFields = {};
   (node.content ?? []).forEach((part, index) => {
-    const key = role(part, index, kind);
+    const key = role(part, index, kind, node.content ?? []);
     if (key && key !== "abilities") values[key] = nodeText(part);
     if (key === "abilities") {
       (part.content?.[1]?.content ?? []).forEach((cell, i) => {
@@ -149,13 +152,19 @@ export function patchTemplate(node: JSONContent, values: TemplateFields): JSONCo
       ? ["classification", "attunement", "description", "properties"]
       : ["body"];
   // Insert missing standard fields without discarding user-created content.
-  let at = Math.min(nodes.length, 2);
+  const order = ["name", ...required];
   for (const key of required) {
-    if (seen.has(key) || !values[key] && key !== "abilities") continue;
+    if (seen.has(key) || (!values[key] && key !== "abilities")) continue;
+    const preceding = [...order.slice(0, order.indexOf(key))].reverse();
+    const anchor = preceding.map((name) =>
+      nodes.findIndex((part) => part.attrs?.templateField === name ||
+        (name === "name" && part.type === "heading" && nodes.indexOf(part) === 0))
+    ).find((index) => index !== -1);
+    const at = anchor === undefined ? Math.min(nodes.length, 2) : anchor + 1;
     nodes.splice(at, 0, key === "abilities"
       ? abilityTable(values)
       : field(paragraph(values[key]), key));
-    at++;
+    seen.add(key);
   }
   return { ...node, content: nodes };
 }
