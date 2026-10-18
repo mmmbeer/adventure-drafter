@@ -53,7 +53,7 @@
     font-size: 16px;
   }
   .brand-icon {
-    width: 30px;
+    width: 52px;
   }
   .app-header {
     gap: 20px;
@@ -70,6 +70,10 @@
   }
   .brand > span:last-child {
     display: none;
+  }
+  .brand-icon {
+    width: 54px;
+    height: 38px;
   }
   .document-title {
     max-width: none;
