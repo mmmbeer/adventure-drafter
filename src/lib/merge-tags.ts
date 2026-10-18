@@ -35,6 +35,6 @@ export function resolveText(node: JSONContent, doc: Adventure, page: number): st
 }
 
 export function interpolateMergeTags(value: string, doc: Adventure, page: number): string {
-  return value.replace(/\\{(title|subtitle|author|page|pages|footer)\\}/g,
+  return value.replace(/\{(title|subtitle|author|page|pages|footer)\}/g,
     (_, name: string) => mergeValue(doc, name, page));
 }
