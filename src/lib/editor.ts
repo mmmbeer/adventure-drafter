@@ -132,16 +132,18 @@ const MergeTag = Node.create({
   addNodeView() { return ReactNodeViewRenderer(MergeTagNode); },
   addInputRules() {
     return [nodeInputRule({
-      find: /\{(title|subtitle|author|page|pages|footer)\}$/,
+      // No capturing group: nodeInputRule treats match[1] as the range
+      // to replace, leaving the braces and a duplicate token behind.
+      find: /\{(?:title|subtitle|author|page|pages|footer)\}$/,
       type: this.type,
-      getAttributes: (match) => ({ name: match[1] }),
+      getAttributes: (match) => ({ name: match[0].slice(1, -1) }),
     })];
   },
   addPasteRules() {
     return [nodePasteRule({
-      find: /\{(title|subtitle|author|page|pages|footer)\}/g,
+      find: /\{(?:title|subtitle|author|page|pages|footer)\}/g,
       type: this.type,
-      getAttributes: (match) => ({ name: match[1] }),
+      getAttributes: (match) => ({ name: match[0].slice(1, -1) }),
     })];
   },
 });
