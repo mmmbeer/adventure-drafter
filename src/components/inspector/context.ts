@@ -1,11 +1,13 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import type { Adventure, Page } from "../../lib/model";
+import type { DocumentSelection } from "../../lib/document-selection";
 import type { Editor } from "@tiptap/react";
 import { fonts } from "../../lib/fonts";
 export interface InspectorProps {
   doc: Adventure;
   page: Page;
   editor: Editor | null;
+  selection: DocumentSelection;
   tab: string;
   setTab: (t: string) => void;
   update: (fn: (d: Adventure) => Adventure) => void;
@@ -17,6 +19,7 @@ export function useInspectorState({
   doc,
   page,
   editor,
+  selection,
   tab,
   setTab,
   update,
@@ -47,12 +50,11 @@ export function useInspectorState({
     : null;
   const blockName = editor?.isActive("heading") ? "heading" : "paragraph";
   const block = editor?.getAttributes(blockName) ?? {};
+  const format = (action: (editor: Editor) => unknown) => {
+    if (!selection.format(action) && editor) action(editor);
+  };
   const blockSetting = (key: string, value: unknown) =>
-    editor
-      ?.chain()
-      .focus()
-      .updateAttributes(blockName, { [key]: value })
-      .run();
+    format((ed) => ed.chain().focus().updateAttributes(blockName, { [key]: value }).run());
   const allFonts = [...fonts, ...doc.fonts.map((f) => f.name)];
   return {
     doc,
@@ -70,6 +72,8 @@ export function useInspectorState({
     blockName,
     block,
     blockSetting,
+    format,
+    selection,
     allFonts,
   };
 }

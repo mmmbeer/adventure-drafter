@@ -16,6 +16,8 @@ export function PageCanvas() {
     setRightOpen,
     workspace,
     report,
+    selectionChanged,
+    replaceSelection,
     focus,
     register,
     change,
@@ -88,6 +90,8 @@ export function PageCanvas() {
             onReclaim={reclaim}
             register={register}
             report={report}
+            onSelection={selectionChanged}
+            onTextInput={replaceSelection}
           />
         ))}
       </div>
@@ -101,3 +105,4 @@ export function PageCanvas() {
     </main>
   );
 }
+

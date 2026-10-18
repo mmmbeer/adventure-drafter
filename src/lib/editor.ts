@@ -32,6 +32,7 @@ import { TemplateNode } from "../components/TemplateNode";
 import { ImageNode } from "../components/ImageNode";
 import { MergeTagNode } from "../components/MergeTagNode";
 import { validMergeTag } from "./merge-tags";
+import { DocumentSelectionDecoration } from "./document-selection-decoration";
 const Heading = Node.create({
   name: "heading",
   group: "block",
@@ -315,6 +316,7 @@ export function extensions() {
     StatBlock,
     ColumnBreak,
     Layout,
+    DocumentSelectionDecoration,
   ];
 }
 export function cleanHtml(html: string) {

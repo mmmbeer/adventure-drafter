@@ -20,6 +20,7 @@ import {
   RemoveFormatting,
   Columns2,
 } from "lucide-react";
+import type { DocumentSelection } from "../lib/document-selection";
 import { fonts } from "../lib/fonts";
 import { makeTemplate, type TemplateKind } from "../lib/template-blocks";
 import type { ReactNode } from "react";
@@ -54,12 +55,14 @@ export function Tool({
 }
 export function Toolbar({
   editor,
+  selection,
   onDialog,
   onInsertPage,
   onIndex,
   customFonts,
 }: {
   editor: Editor | null;
+  selection: DocumentSelection;
   onDialog: (name: string) => void;
   onInsertPage: () => void;
   onIndex: () => void;
@@ -75,7 +78,10 @@ export function Toolbar({
     };
   }, [editor]);
   const command = (fn: (e: Editor) => void) => {
-    if (editor) fn(editor);
+    if (!selection.format(fn) && editor) fn(editor);
+  };
+  const toggleMark = (name: string, attrs?: Record<string, unknown>) => {
+    if (!selection.toggleMark(name, attrs)) editor?.chain().focus().toggleMark(name, attrs).run();
   };
   const block = (type: string) => {
     if (!editor) return;
@@ -100,15 +106,15 @@ export function Toolbar({
       <div className="format-group">
         <Tool
           label="Undo (Ctrl+Z)"
-          disabled={!editor?.can().undo()}
-          onClick={() => editor?.chain().focus().undo().run()}
+          disabled={!selection.canUndo() && !editor?.can().undo()}
+          onClick={() => { if (!selection.history()) editor?.chain().focus().undo().run(); }}
         >
           <Undo2 size={16} />
         </Tool>
         <Tool
           label="Redo (Ctrl+Shift+Z)"
-          disabled={!editor?.can().redo()}
-          onClick={() => editor?.chain().focus().redo().run()}
+          disabled={!selection.canRedo() && !editor?.can().redo()}
+          onClick={() => { if (!selection.history(true)) editor?.chain().focus().redo().run(); }}
         >
           <Redo2 size={16} />
         </Tool>
@@ -146,7 +152,7 @@ export function Toolbar({
           disabled={!editor}
           value={editor?.getAttributes("textStyle").fontFamily || ""}
           onChange={(e) =>
-            editor?.chain().focus().setFontFamily(e.target.value).run()
+            command((ed) => ed.chain().focus().setFontFamily(e.target.value).run())
           }
         >
           <option value="">Document font</option>
@@ -159,7 +165,7 @@ export function Toolbar({
           disabled={!editor}
           value={editor?.getAttributes("textStyle").fontSize || ""}
           onChange={(e) =>
-            editor?.chain().focus().setFontSize(e.target.value).run()
+            command((ed) => ed.chain().focus().setFontSize(e.target.value).run())
           }
         >
           <option value="">Auto</option>
@@ -186,7 +192,7 @@ export function Toolbar({
               label={String(label)}
               active={editor?.isActive(String(mark))}
               onClick={() =>
-                editor?.chain().focus().toggleMark(String(mark)).run()
+                toggleMark(String(mark))
               }
             >
               <I size={16} />
@@ -197,7 +203,7 @@ export function Toolbar({
           label="Highlight"
           active={editor?.isActive("highlight")}
           onClick={() =>
-            editor?.chain().focus().toggleHighlight({ color: "#f5d681" }).run()
+            toggleMark("highlight", { color: "#f5d681" })
           }
         >
           <Highlighter size={16} />
@@ -209,7 +215,7 @@ export function Toolbar({
             type="color"
             defaultValue="#823a32"
             onInput={(e) =>
-              editor?.chain().focus().setColor(e.currentTarget.value).run()
+              command((ed) => ed.chain().focus().setColor(e.currentTarget.value).run())
             }
           />
         </label>
@@ -228,7 +234,7 @@ export function Toolbar({
               label={`Align ${align}`}
               active={editor?.isActive({ textAlign: align })}
               onClick={() =>
-                editor?.chain().focus().setTextAlign(String(align)).run()
+                command((ed) => ed.chain().focus().setTextAlign(String(align)).run())
               }
             >
               <I size={16} />
@@ -238,14 +244,14 @@ export function Toolbar({
         <Tool
           label="Bullet list"
           active={editor?.isActive("bulletList")}
-          onClick={() => editor?.chain().focus().toggleBulletList().run()}
+          onClick={() => command((ed) => ed.chain().focus().toggleBulletList().run())}
         >
           <List size={16} />
         </Tool>
         <Tool
           label="Numbered list"
           active={editor?.isActive("orderedList")}
-          onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+          onClick={() => command((ed) => ed.chain().focus().toggleOrderedList().run())}
         >
           <ListOrdered size={16} />
         </Tool>
@@ -260,20 +266,20 @@ export function Toolbar({
         </Tool>
         <Tool
           label="Superscript"
-          onClick={() => editor?.chain().focus().toggleSuperscript().run()}
+          onClick={() => command((ed) => ed.chain().focus().toggleSuperscript().run())}
         >
           <Superscript size={16} />
         </Tool>
         <Tool
           label="Subscript"
-          onClick={() => editor?.chain().focus().toggleSubscript().run()}
+          onClick={() => command((ed) => ed.chain().focus().toggleSubscript().run())}
         >
           <Subscript size={16} />
         </Tool>
         <Tool
           label="Clear formatting"
           onClick={() =>
-            editor?.chain().focus().unsetAllMarks().clearNodes().run()
+            command((ed) => ed.chain().focus().unsetAllMarks().clearNodes().run())
           }
         >
           <RemoveFormatting size={16} />

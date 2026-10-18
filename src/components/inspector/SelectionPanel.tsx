@@ -2,7 +2,7 @@ import { useInspector } from "./context";
 import { MERGE_TAGS, mergeNode } from "../../lib/merge-tags";
 import type { MergeTagName } from "../../lib/merge-tags";
 export function SelectionPanel() {
-  const { editor, image, block, blockSetting } = useInspector();
+  const { editor, image, block, blockSetting, selection } = useInspector();
   return (
     <>
       <section className="panel-section">
@@ -45,7 +45,7 @@ export function SelectionPanel() {
               aria-pressed={editor.isActive(mark)}
               onMouseDown={(e) => e.preventDefault()}
               className={editor.isActive(mark) ? "active" : ""}
-              onClick={() => editor.chain().focus().toggleMark(mark).run()}>
+              onClick={() => { if (!selection.toggleMark(mark)) editor.chain().focus().toggleMark(mark).run(); }}>
               {mark[0].toUpperCase() + mark.slice(1)}
             </button>)}
         </div>

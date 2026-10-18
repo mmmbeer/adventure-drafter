@@ -10,3 +10,5 @@
 @import "./styles/dialogs.css";
 @import "./styles/feedback.css";
 @import "./styles/responsive.css";
+
+@import "./styles/document-selection.css";

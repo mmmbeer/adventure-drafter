@@ -46,6 +46,7 @@ export default function App() {
         {!preview && (
           <Toolbar
             editor={editor}
+            selection={desk.documentSelection}
             onDialog={openDialog}
             onInsertPage={splitPage}
             onIndex={indexSelection}
@@ -60,6 +61,7 @@ export default function App() {
               doc={doc}
               page={activePage}
               editor={editor}
+              selection={desk.documentSelection}
               tab={tab}
               setTab={setTab}
               update={update}
@@ -95,3 +97,4 @@ export default function App() {
     </WorkspaceContext.Provider>
   );
 }
+
