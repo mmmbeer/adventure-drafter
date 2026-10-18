@@ -23,6 +23,7 @@ import {
 import { fonts } from "../lib/fonts";
 import { makeTemplate, type TemplateKind } from "../lib/template-blocks";
 import type { ReactNode } from "react";
+import { MERGE_TAGS, mergeNode, type MergeTagName } from "../lib/merge-tags";
 export function Tool({
   label,
   onClick,
@@ -322,6 +323,21 @@ export function Toolbar({
         <option value="rule">Horizontal rule</option>
         <option value="columnBreak">Column break</option>
         <option value="page">Page break</option>
+      </select>
+      <select
+        aria-label="Insert merge tag"
+        disabled={!editor}
+        className="insert-select"
+        value=""
+        onChange={(event) => {
+          const name = event.target.value as MergeTagName;
+          if (name) editor?.chain().focus().insertContent(mergeNode(name)).run();
+        }}
+      >
+        <option value="">{"{ } Fields"}</option>
+        {MERGE_TAGS.map((tag) => <option value={tag.name} key={tag.name}>
+          {`{${tag.name}}`} · {tag.label}
+        </option>)}
       </select>
       <button
         className="index-selection"
