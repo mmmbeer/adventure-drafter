@@ -132,7 +132,7 @@ test("clipboard image and high heading levels remain editable", async ({
     });
   await expect(page.locator(".canvas img")).toHaveCount(1);
   await page.locator(".canvas img").click();
-  await page.getByRole("button", { name: "Page", exact: true }).click();
+  await page.getByRole("button", { name: "Inspect", exact: true }).click();
   await page
     .getByRole("combobox", { name: "Text flow", exact: true })
     .selectOption("left");
