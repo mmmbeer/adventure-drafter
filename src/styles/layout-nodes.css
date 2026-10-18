@@ -1,0 +1,142 @@
+.tiptap .layout-node {
+  position: relative;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.tiptap .template-content > :first-child { margin-top: 0; }
+.tiptap .layout-node[data-flow="left"] {
+  float: left;
+  clear: left;
+  margin: 8px 14px 9px 0;
+}
+.tiptap .layout-node[data-flow="right"] {
+  float: right;
+  clear: right;
+  margin: 8px 0 9px 14px;
+}
+.tiptap .layout-node[data-wide="true"] {
+  column-span: all;
+  float: none;
+  clear: both;
+  display: block;
+  max-width: 100%;
+  margin: 1em auto;
+}
+.tiptap figure.image-node {
+  padding: 0;
+  border: 0;
+  background: none;
+  break-inside: avoid;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+.tiptap figure.image-node > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  margin: 0;
+  object-fit: contain;
+}
+.tiptap section[data-statblock] table[data-template-field="abilities"] {
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+  table-layout: fixed;
+  margin: 0.55em 0;
+  background: transparent;
+}
+.tiptap section[data-statblock] table[data-template-field="abilities"] th,
+.tiptap section[data-statblock] table[data-template-field="abilities"] td {
+  text-align: center;
+  vertical-align: middle;
+  border: 0;
+  padding: 3px 1px;
+  min-width: 0;
+  font-size: 0.82em;
+  background: transparent;
+}
+.tiptap section[data-statblock] table[data-template-field="abilities"] th {
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 0.85em;
+}
+.tiptap section[data-statblock] table[data-template-field="abilities"] p {
+  text-align: center;
+  margin: 0;
+  white-space: nowrap;
+}
+.tiptap .node-tools {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  z-index: 5;
+  display: flex;
+  background: #f9faf5f2;
+  border: 1px solid #b0bba8;
+  box-shadow: 0 1px 4px #0002;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .12s;
+}
+.tiptap .node-tools button,
+.tiptap .node-resize {
+  display: grid;
+  place-items: center;
+  padding: 5px;
+  min-width: 28px;
+  min-height: 28px;
+  color: #354a2d;
+  background: #f9faf5;
+  border: 0;
+  cursor: pointer;
+}
+.tiptap .node-tools button:hover,
+.tiptap .node-resize:hover {
+  background: #e6eedb;
+}
+.tiptap .node-resize {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  z-index: 5;
+  cursor: nwse-resize;
+  border: 1px solid #afbea6;
+  border-right: 0;
+  border-bottom: 0;
+  opacity: 0;
+  pointer-events: none;
+  touch-action: none;
+}
+.tiptap .layout-node:hover > .node-tools,
+.tiptap .layout-node:hover > .node-resize,
+.tiptap .layout-node:focus-within > .node-tools,
+.tiptap .layout-node:focus-within > .node-resize,
+.tiptap .layout-node.is-selected > .node-tools,
+.tiptap .layout-node.is-selected > .node-resize {
+  opacity: 1;
+  pointer-events: auto;
+}
+.tiptap .layout-node[data-flow="left"],
+.tiptap .layout-node[data-flow="right"] {
+  break-inside: avoid;
+}
+.template-field-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.template-field-grid label { margin: 0; min-width: 0; }
+.template-field-grid input,
+.template-field-grid textarea { width: 100%; }
+.template-field-grid small { font-size: 10px; color: #85937a; }
+.template-field-grid .template-field-full { grid-column: 1 / -1; }
+@media (max-width: 540px) {
+  .template-field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (pointer: coarse) {
+  .tiptap .layout-node > .node-tools,
+  .tiptap .layout-node > .node-resize { opacity: 1; pointer-events: auto; }
+}
+@media print {
+  .tiptap .node-tools, .tiptap .node-resize { display: none !important; }
+}
