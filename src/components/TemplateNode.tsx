@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import { Columns2, Pencil, Grip } from "lucide-react";
 import { TemplateFieldsDialog } from "./dialogs/TemplateFieldsDialog";
@@ -25,7 +26,6 @@ export function TemplateNode(props: NodeViewProps) {
     setEditing(false);
   };
   return (
-    <>
       <NodeViewWrapper
         as={node.type.name === "callout" ? "aside" : "section"}
         className={`layout-node template-node ${selected ? "is-selected" : ""}`}
@@ -45,8 +45,10 @@ export function TemplateNode(props: NodeViewProps) {
         )}
         <NodeViewContent className="template-content" />
         {editor.isEditable && <button className="node-resize no-print" aria-label="Resize layout box" title="Drag to resize. Drag beyond the column to span both columns." contentEditable={false} onPointerDown={resize}><Grip size={16} /></button>}
+        {editing && createPortal(
+          <TemplateFieldsDialog node={node.toJSON()} onClose={() => setEditing(false)} onSave={save} />,
+          document.body,
+        )}
       </NodeViewWrapper>
-      {editing && <TemplateFieldsDialog node={node.toJSON()} onClose={() => setEditing(false)} onSave={save} />}
-    </>
   );
 }
