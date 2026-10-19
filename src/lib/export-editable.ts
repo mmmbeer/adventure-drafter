@@ -416,6 +416,7 @@ export async function exportEditable(
   const file = new Document({
     title: doc.title,
     creator: doc.author,
+    background: { color: color(theme.paper) },
     styles: {
       default: {
         document: {

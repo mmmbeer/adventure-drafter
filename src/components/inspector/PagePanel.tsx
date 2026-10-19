@@ -1,3 +1,4 @@
+import { BackgroundColor } from "./BackgroundColor";
 import { allMasters } from "../../lib/designs";
 import { ImagePlus } from "lucide-react";
 import { useInspector } from "./context";
@@ -67,6 +68,14 @@ export function PagePanel() {
             Keep a manual page break
           </label>
         )}
+      </section>
+      <section className="panel-section">
+        <h3>Page background</h3>
+        <BackgroundColor />
+        <p className="help">
+          Applies throughout the document. A page master's paper color can
+          override this default.
+        </p>
       </section>
       <section className="panel-section">
         <h3>Page artwork</h3>

@@ -167,3 +167,17 @@
   height: 30px;
   padding: 2px;
 }
+
+.font-preview {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  margin-bottom: 12px;
+  border: 1px solid var(--line);
+}
+.font-preview strong {
+  font-size: 19px;
+}
+.font-preview span {
+  font-size: 14px;
+}

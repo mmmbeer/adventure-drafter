@@ -1,7 +1,18 @@
+import {
+  applyStylePreset,
+  applyFontPairing,
+  fontPairings,
+} from "../../lib/appearance";
+import { ColorThemePanel } from "./ColorThemePanel";
 import { themes } from "../../lib/model";
 import { useInspector } from "./context";
 export function StylePanel() {
   const { doc, onFont, setting, allFonts, onDialog } = useInspector();
+  const pairing = fontPairings.find(
+    (p) =>
+      p.headingFont === doc.settings.theme.headingFont &&
+      p.bodyFont === doc.settings.theme.bodyFont,
+  );
   return (
     <>
       <div className="panel-heading">
@@ -13,12 +24,18 @@ export function StylePanel() {
           Manage styles and page masters
         </button>
       </section>
+      <ColorThemePanel />
+      <div className="panel-heading">
+        <span>STYLE PRESETS</span>
+      </div>
       <div className="templates">
         {[...themes, ...(doc.savedThemes ?? [])].map((t) => (
           <button
             className={`template ${doc.settings.theme.id === t.id ? "chosen" : ""}`}
             key={t.id}
-            onClick={() => setting("theme", { ...t })}
+            onClick={() =>
+              setting("theme", applyStylePreset(doc.settings.theme, t))
+            }
           >
             <span
               className="template-sample"
@@ -42,8 +59,30 @@ export function StylePanel() {
       <section className="panel-section">
         <h3>Typography</h3>
         <label>
+          Font pairing
+          <select
+            aria-label="Font pairing"
+            value={pairing?.id ?? ""}
+            onChange={(e) => {
+              const next = fontPairings.find((p) => p.id === e.target.value);
+              if (next)
+                setting("theme", applyFontPairing(doc.settings.theme, next));
+            }}
+          >
+            <option value="" disabled>
+              Custom fonts
+            </option>
+            {fontPairings.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
           Heading family
           <select
+            aria-label="Heading family"
             value={doc.settings.theme.headingFont}
             onChange={(e) =>
               setting("theme", {
@@ -60,6 +99,7 @@ export function StylePanel() {
         <label>
           Body family
           <select
+            aria-label="Body family"
             value={doc.settings.theme.bodyFont}
             onChange={(e) =>
               setting("theme", {
@@ -73,6 +113,25 @@ export function StylePanel() {
             ))}
           </select>
         </label>
+        <div
+          className="font-preview"
+          style={{
+            background: doc.settings.theme.paper,
+            color: doc.settings.theme.ink,
+          }}
+        >
+          <strong
+            style={{
+              fontFamily: doc.settings.theme.headingFont,
+              color: doc.settings.theme.accent,
+            }}
+          >
+            The next adventure
+          </strong>
+          <span style={{ fontFamily: doc.settings.theme.bodyFont }}>
+            Beyond the old gate, a new story begins.
+          </span>
+        </div>
         <div className="field-pair">
           <label>
             Body size
@@ -110,27 +169,6 @@ export function StylePanel() {
         <p className="help">
           20 font families are bundled. Custom fonts travel with your project.
         </p>
-      </section>
-      <section className="panel-section">
-        <h3>Palette</h3>
-        <div className="palette">
-          {(["paper", "ink", "accent"] as const).map((k) => (
-            <label key={k}>
-              <input
-                aria-label={`${k} color`}
-                type="color"
-                value={doc.settings.theme[k]}
-                onChange={(e) =>
-                  setting("theme", {
-                    ...doc.settings.theme,
-                    [k]: e.target.value,
-                  })
-                }
-              />
-              <span>{k}</span>
-            </label>
-          ))}
-        </div>
       </section>
     </>
   );
