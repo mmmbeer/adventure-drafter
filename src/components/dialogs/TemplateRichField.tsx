@@ -1,3 +1,4 @@
+import { Table, TableRow, TableCell, TableHeader } from "@tiptap/extension-table";
 import { useRef, useState } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -21,6 +22,7 @@ export function TemplateRichField({
     extensions: [
       StarterKit.configure({ link: { openOnClick: false }, underline: {} }),
       Highlight,
+      Table, TableRow, TableCell, TableHeader,
     ],
     content: { type: "doc", content: initial.length ? initial : [{ type: "paragraph" }] },
     editorProps: { attributes: { "aria-label": label, spellcheck: "true" } },

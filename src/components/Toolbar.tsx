@@ -1,3 +1,4 @@
+import { BlockStyleSelect } from "./BlockStyleSelect";
 import type { Editor } from "@tiptap/react";
 import { useEffect, useState } from "react";
 import {
@@ -95,7 +96,8 @@ export function Toolbar({
       ).run();
     else if (type === "columnBreak")
       c.insertContent({ type: "columnBreak" }).run();
-    else if (type === "reference" || type === "library") onDialog(type);
+    else if (type === "reference" || type === "library" || type === "srd")
+      onDialog(type);
     else if (type === "image") onDialog("image");
     else if (type === "page") onInsertPage();
     else if (type === "rule") c.setHorizontalRule().run();
@@ -128,33 +130,7 @@ export function Toolbar({
         </Tool>
       </div>
       <div className="format-group">
-        <select
-          aria-label="Paragraph style"
-          disabled={!editor}
-          value={
-            editor?.isActive("heading")
-              ? editor.getAttributes("heading").level
-              : "p"
-          }
-          onChange={(e) =>
-            command((ed) =>
-              e.target.value === "p"
-                ? ed.chain().focus().setParagraph().run()
-                : ed
-                    .chain()
-                    .focus()
-                    .setNode("heading", { level: Number(e.target.value) })
-                    .run(),
-            )
-          }
-        >
-          <option value="p">Paragraph</option>
-          {Array.from({ length: 9 }, (_, i) => (
-            <option key={i} value={i + 1}>
-              Heading {i + 1}
-            </option>
-          ))}
-        </select>
+        <BlockStyleSelect editor={editor} format={command} />
         <select
           aria-label="Text font"
           disabled={!editor}
@@ -335,6 +311,14 @@ export function Toolbar({
           <Columns2 size={16} />
         </Tool>
       </div>
+      <button
+        className="index-selection"
+        disabled={!editor}
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => onDialog("srd")}
+      >
+        SRD references
+      </button>
       <select
         aria-label="Insert block"
         disabled={!editor}
@@ -343,6 +327,7 @@ export function Toolbar({
         onChange={(e) => block(e.target.value)}
       >
         <option value="">+ Insert</option>
+        <option value="srd">SRD monster / magic item</option>
         <option value="reference">Cross-reference</option>
         <option value="library">Reusable content</option>
         <option value="readaloud">Read-aloud box</option>

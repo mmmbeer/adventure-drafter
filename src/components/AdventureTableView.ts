@@ -1,3 +1,4 @@
+import { boxCss } from "../lib/box-formatting";
 import { TableView } from "@tiptap/extension-table";
 import type { Node } from "@tiptap/pm/model";
 import type { EditorView } from "@tiptap/pm/view";
@@ -22,6 +23,17 @@ export class AdventureTableView extends TableView {
   }
 
   private syncLayout(node: Node) {
+    // Width is managed by TableView. Only replace properties owned by box formatting.
+    for (const key of [
+      "borderTop",
+      "borderRight",
+      "borderBottom",
+      "borderLeft",
+      "backgroundColor",
+      "padding",
+    ] as const)
+      this.table.style[key] = "";
+    Object.assign(this.table.style, boxCss(node.attrs.boxFormat));
     const wide = String(!!node.attrs.wide);
     this.dom.dataset.wide = wide;
     this.dom.dataset.styleId = node.attrs.styleId || "";

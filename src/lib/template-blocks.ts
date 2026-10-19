@@ -175,7 +175,7 @@ export function patchTemplate(
       seen.add(key);
     } else nodes.push(part);
   });
-  const required = kind === "creature"
+  const required = node.attrs?.srdContinuation ? [] : kind === "creature"
     ? ["classification", "armor", "hitPoints", "speed", "abilities", "senses", "languages", "challenge"]
     : kind === "magicItem"
       ? ["classification", "attunement", "description", "properties"]
@@ -183,7 +183,8 @@ export function patchTemplate(
   // Insert missing standard fields without discarding user-created content.
   const order = ["name", ...required];
   for (const key of required) {
-    if (seen.has(key) || (!values[key] && key !== "abilities")) continue;
+    if (seen.has(key) || (!values[key] && !rich[key]?.some((part) => nodeText(part).trim()) && key !== "abilities")) continue;
+    if (key === "abilities" && node.attrs?.srdId && !original.str) continue;
     const preceding = [...order.slice(0, order.indexOf(key))].reverse();
     const anchor = preceding.map((name) =>
       nodes.findIndex((part) => part.attrs?.templateField === name ||
@@ -194,6 +195,14 @@ export function patchTemplate(
       ? rich[key].map((block) => field(block, key))
       : [key === "abilities" ? abilityTable(values) : field(paragraph(values[key]), key)]));
     seen.add(key);
+  }
+  if (kind === "creature") {
+    for (const { key, label } of templateLabels(kind).filter((item) => item.multiline)) {
+      if (seen.has(key) || (!values[key]?.trim() && !rich[key]?.some((part) => nodeText(part).trim()))) continue;
+      nodes.push(heading(label, 3), ...(rich[key]
+        ? rich[key].map((block) => field(block, key))
+        : [field(paragraph(values[key]), key)]));
+    }
   }
   return { ...node, content: nodes };
 }
@@ -210,6 +219,9 @@ export function templateLabels(kind: string): { key: string; label: string; mult
     { key: "challenge", label: "Challenge" },
     { key: "traits", label: "Traits", multiline: true },
     { key: "actions", label: "Actions", multiline: true },
+    { key: "bonusActions", label: "Bonus actions", multiline: true },
+    { key: "reactions", label: "Reactions", multiline: true },
+    { key: "legendaryActions", label: "Legendary actions", multiline: true },
   ];
   if (kind === "magicItem") return [
     { key: "name", label: "Item name" },

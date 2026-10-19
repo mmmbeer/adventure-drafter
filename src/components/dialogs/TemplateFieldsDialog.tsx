@@ -20,7 +20,8 @@ export function TemplateFieldsDialog({
   const [flow, setFlow] = useState(String(node.attrs?.flow ?? "block"));
   const [wide, setWide] = useState(!!node.attrs?.wide);
   const kind = node.attrs?.kind ?? "creature";
-  const labels = templateLabels(kind);
+  const labels = templateLabels(kind).filter(({ key }) =>
+    !node.attrs?.srdContinuation || fields[key] !== undefined);
   const set = (key: string, value: string) =>
     setFields((current) => ({ ...current, [key]: value }));
   return (

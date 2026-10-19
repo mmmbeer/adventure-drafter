@@ -1,3 +1,6 @@
+import { SrdBlockMetadata, splitSrdBlock } from "./srd-block";
+import { BlockFormatting } from "./block-formatting";
+import { BoxFormatting } from "./box-formatting";
 import {
   AuthoringAttributes,
   CrossReference,
@@ -350,7 +353,10 @@ export function extensions() {
         HTMLAttributes: { rel: "noopener noreferrer" },
       },
     }),
+    SrdBlockMetadata,
     Heading,
+    BlockFormatting,
+    BoxFormatting,
     AuthoringAttributes,
     CrossReference,
     ReusableBlock,
@@ -408,6 +414,8 @@ export function cleanHtml(html: string) {
   });
 }
 export function splitNode(n: JSONContent): [JSONContent, JSONContent] | null {
+  if (n.type === "statBlock" && n.attrs?.srdId)
+    return splitSrdBlock(n, splitNode);
   if (n.type === "paragraph" || n.type === "heading") {
     const total = (n.content ?? []).reduce(
       (s, c) => s + (c.text?.length ?? 1),

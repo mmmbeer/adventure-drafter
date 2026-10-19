@@ -14,3 +14,7 @@
 @import "./styles/document-selection.css";
 
 @import "./styles/authoring.css";
+
+@import "./styles/block-formatting.css";
+
+@import "./styles/srd.css";

@@ -1,3 +1,4 @@
+import { boxCss } from "../lib/box-formatting";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -48,13 +49,16 @@ export function TemplateNode(props: NodeViewProps) {
       data-statblock={node.type.name === "statBlock" ? "" : undefined}
       data-callout={node.type.name === "callout" ? "" : undefined}
       data-kind={kind}
+      data-srd-id={node.attrs.srdId}
+      data-srd-name={node.attrs.srdName}
+      data-srd-continuation={node.attrs.srdContinuation ? "true" : undefined}
       id={`ref-${node.attrs.refId}`}
       data-ref-id={node.attrs.refId}
       data-style-id={node.attrs.styleId}
       data-flow={flow}
       data-wide={String(!!node.attrs.wide)}
       data-width={width}
-      style={{ width: `${width}%` }}
+      style={{ width: `${width}%`, ...boxCss(node.attrs.boxFormat) }}
     >
       {!editor.isEditable ? null : (
         <div className="node-tools no-print" contentEditable={false}>

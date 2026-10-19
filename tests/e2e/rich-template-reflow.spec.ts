@@ -5,16 +5,16 @@ test("formatted Actions in a template modal persist through direct editing and r
   const creature = page.locator(".tiptap section[data-statblock]").first();
   await creature.hover();
   await creature.getByRole("button", { name: "Edit template fields" }).click();
-  const actions = page.getByRole("textbox", { name: "Actions" });
+  const actions = page.getByRole("textbox", { name: "Actions", exact: true });
   await actions.click();
   await actions.press("Control+a");
-  await page.getByRole("toolbar", { name: "Actions formatting" })
+  await page.getByRole("toolbar", { name: "Actions formatting", exact: true })
     .getByRole("button", { name: "Bold" }).click();
   await page.getByRole("button", { name: "Apply changes" }).click();
   await expect(creature.locator("strong")).toContainText("Tolling grasp");
   await creature.hover();
   await creature.getByRole("button", { name: "Edit template fields" }).click();
-  await expect(page.getByRole("textbox", { name: "Actions" }).locator("strong"))
+  await expect(page.getByRole("textbox", { name: "Actions", exact: true }).locator("strong"))
     .toContainText("Tolling grasp");
   await page.getByLabel("Armor Class").fill("Armor Class 17");
   await page.getByRole("button", { name: "Apply changes" }).click();

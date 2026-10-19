@@ -123,7 +123,7 @@ export function styleCss(styles: NamedStyle[]) {
   return styles
     .map(
       (s) =>
-        `.paper [data-style-id="${s.id}"] {font-family:${JSON.stringify(s.fontFamily)},serif!important;font-size:${s.fontSize}px!important;color:${s.color}!important;line-height:${s.lineHeight}!important;margin-top:${s.spaceBefore}px!important;margin-bottom:${s.spaceAfter}px!important;font-weight:${s.bold ? 700 : 400}!important;font-style:${s.italic ? "italic" : "normal"}!important;${s.border ? `border:1px solid ${s.color}!important;padding:10px;background:${s.background}!important;` : ""}}`,
+        `.paper [data-style-id="${s.id}"] {font-family:${JSON.stringify(s.fontFamily)},serif!important;font-size:${s.fontSize}px!important;color:${s.color}!important;line-height:${s.lineHeight}!important;margin-top:${s.spaceBefore}px!important;margin-bottom:${s.spaceAfter}px!important;font-weight:${s.bold ? 700 : 400}!important;font-style:${s.italic ? "italic" : "normal"}!important;${s.border ? `border:1px solid ${s.color};padding:10px;background-color:${s.background};` : ""}}`,
     )
     .join("\n");
 }
