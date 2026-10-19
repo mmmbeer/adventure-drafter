@@ -75,6 +75,14 @@ export async function importFile(file: File): Promise<ImportResult> {
         cleanHtml(generateHTML(p.content, extensions())),
         extensions(),
       );
+    for (const entry of d.contentLibrary ?? [])
+      entry.content =
+        generateJSON(
+          cleanHtml(
+            generateHTML({ type: "doc", content: entry.content }, extensions()),
+          ),
+          extensions(),
+        ).content ?? [];
     d.id = crypto.randomUUID();
     return { document: d, warnings: [] };
   }

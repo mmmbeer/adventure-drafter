@@ -11,6 +11,14 @@ export function ExportDialog() {
       <p>Choose an edition for your readers or your next editing pass.</p>
       <div className="export-descriptions">
         <section>
+          <b>PDF · searchable with links</b>
+          <p>
+            Preserves rendered pages and adds a selectable text layer, working
+            links, and heading bookmarks. Uses an embedded Unicode font for
+            searching and copying.
+          </p>
+        </section>
+        <section>
           <b>PDF · exact appearance</b>
           <p>
             High-resolution page images preserve fonts, artwork, backgrounds and
@@ -47,6 +55,13 @@ export function ExportDialog() {
         </section>
       </div>
       <DialogActions>
+        <button
+          className="primary"
+          disabled={!!busy}
+          onClick={() => publish("searchable")}
+        >
+          PDF · searchable with links
+        </button>
         <button disabled={!!busy} onClick={() => publish("pdf")}>
           PDF · exact appearance
         </button>

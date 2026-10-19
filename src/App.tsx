@@ -1,3 +1,4 @@
+import { styleCss } from "./lib/designs";
 import { Loader2, X } from "lucide-react";
 import { Toolbar } from "./components/Toolbar";
 import { Inspector } from "./components/Inspector";
@@ -35,13 +36,19 @@ export default function App() {
   if (!ready)
     return (
       <div className="boot">
-        <img className="boot-logo" src="/brand-mark.svg" alt="" aria-hidden="true" />
+        <img
+          className="boot-logo"
+          src="/brand-mark.svg"
+          alt=""
+          aria-hidden="true"
+        />
         <p>Opening your writing desk…</p>
       </div>
     );
   return (
     <WorkspaceContext.Provider value={desk}>
       <div className={`app ${preview ? "preview-mode" : ""}`}>
+        <style>{styleCss(doc.namedStyles ?? [])}</style>
         <WorkspaceHeader />
         {!preview && (
           <Toolbar
@@ -97,4 +104,3 @@ export default function App() {
     </WorkspaceContext.Provider>
   );
 }
-

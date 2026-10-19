@@ -35,7 +35,11 @@ export function usePublishingActions(state: WorkspaceState) {
         throw new Error(
           "Some content still overflows a page. Wait for page flow or reduce the size of the oversized block before exporting.",
         );
-      if (type === "pdf") {
+      if (type === "searchable") {
+        const { exportSearchablePdf } =
+          await import("../lib/export-searchable");
+        await exportSearchablePdf(docRef.current, setBusy);
+      } else if (type === "pdf") {
         const { exportPdf } = await import("../lib/export");
         await exportPdf(docRef.current, setBusy);
       } else if (type === "docx") {
@@ -47,7 +51,12 @@ export function usePublishingActions(state: WorkspaceState) {
       }
       report("Your export is ready.");
     } catch (e) {
-      report((e as Error).message);
+      console.error("Adventure export failed", e);
+      report(
+        e instanceof Error
+          ? e.message
+          : "Page rendering failed. Check the artwork and fonts, then try exporting again.",
+      );
     } finally {
       setBusy("");
     }

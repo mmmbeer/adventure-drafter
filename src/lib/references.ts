@@ -25,12 +25,18 @@ export function referenceTerms(doc: Adventure): string[] {
   const headings = doc.pages
     .filter((p) => p.kind === "body")
     .flatMap((p) => p.content.content ?? [])
-    .filter((n) => n.type === "heading" &&
-      Number(n.attrs?.level ?? 1) <= (doc.settings.indexDepth ?? 3))
-    .map(nodeText).map((t) => t.trim()).filter((t) => !!t && t.length <= 100);
+    .filter(
+      (n) =>
+        n.type === "heading" &&
+        Number(n.attrs?.level ?? 1) <= (doc.settings.indexDepth ?? 3),
+    )
+    .map(nodeText)
+    .map((t) => t.trim())
+    .filter((t) => !!t && t.length <= 100);
   const unique = new Map<string, string>();
   [...manual, ...headings].forEach((t) => {
-    if (!unique.has(t.toLocaleLowerCase())) unique.set(t.toLocaleLowerCase(), t);
+    if (!unique.has(t.toLocaleLowerCase()))
+      unique.set(t.toLocaleLowerCase(), t);
   });
   return [...unique.values()];
 }
@@ -70,7 +76,9 @@ export function entries(doc: Adventure) {
               level: Number(n.attrs?.level ?? 1),
               page: pageNumber(doc, i),
               pageId: p.id,
-              target: `${p.id}-heading-${j}`,
+              target: n.attrs?.refId
+                ? `ref-${n.attrs.refId}`
+                : `${p.id}-heading-${j}`,
             },
           ]
         : [],
@@ -78,13 +86,15 @@ export function entries(doc: Adventure) {
   );
 }
 export function keywordIndex(doc: Adventure) {
-  return referenceTerms(doc).sort((a, b) => a.localeCompare(b))
+  return referenceTerms(doc)
+    .sort((a, b) => a.localeCompare(b))
     .map((term) => ({
       term,
       pages: doc.pages.flatMap((p, i) =>
         p.kind === "body" &&
         resolveText(p.content, doc, pageNumber(doc, i))
-          .toLocaleLowerCase().includes(term.toLocaleLowerCase())
+          .toLocaleLowerCase()
+          .includes(term.toLocaleLowerCase())
           ? [pageNumber(doc, i)]
           : [],
       ),

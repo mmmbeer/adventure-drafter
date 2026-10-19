@@ -1,3 +1,4 @@
+import { identifyDocument } from "../lib/anchors";
 import { createAdventure, type Adventure } from "../lib/model";
 import { saveDocument, saveVersion, requestPersistence } from "../lib/storage";
 import { installFonts } from "../lib/fonts";
@@ -21,7 +22,7 @@ export function useDocumentActions(state: WorkspaceState) {
       await saveDocument(docRef.current);
       const next = createAdventure(blank);
       setEditor(null);
-      setDoc(next);
+      setDoc(identifyDocument(next));
       setActive(next.pages[0].id);
       setDialog("");
       await requestPersistence();
@@ -33,7 +34,7 @@ export function useDocumentActions(state: WorkspaceState) {
     await saveDocument(docRef.current);
     await installFonts(next.fonts);
     setEditor(null);
-    setDoc(next);
+    setDoc(identifyDocument(next));
     setActive(next.pages[0].id);
     setDialog("");
   };

@@ -5,7 +5,8 @@
   overflow: hidden;
   background: var(--paper);
   color: var(--ink);
-  padding: var(--margin);
+  padding: var(--margin) var(--margin-right, var(--margin)) var(--margin)
+    var(--margin-left, var(--margin));
   box-shadow:
     0 4px 16px #2635241c,
     0 1px 3px #2635241c;
@@ -49,8 +50,8 @@
 }
 .running-header {
   position: absolute;
-  left: var(--margin);
-  right: var(--margin);
+  left: var(--margin-left, var(--margin));
+  right: var(--margin-right, var(--margin));
   top: 23px;
   display: flex;
   justify-content: space-between;
@@ -73,8 +74,8 @@
 .page-footer {
   position: absolute;
   bottom: 24px;
-  left: var(--margin);
-  right: var(--margin);
+  left: var(--margin-left, var(--margin));
+  right: var(--margin-right, var(--margin));
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -165,12 +166,15 @@
 .continuation-hint {
   position: absolute;
   bottom: calc(var(--margin) - 22px);
-  right: var(--margin);
+  right: var(--margin-right, var(--margin));
   z-index: 1;
   padding: 3px 6px;
   background: color-mix(in srgb, var(--paper) 92%, transparent);
   border-top: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
   color: var(--accent);
-  font: italic 9px var(--body-font), Georgia, serif;
+  font:
+    italic 9px var(--body-font),
+    Georgia,
+    serif;
   pointer-events: none;
 }

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import { useDesk } from "../state/context";
 import { mergeValue } from "../lib/merge-tags";
@@ -12,6 +13,10 @@ export function MergeTagNode({ node, editor }: NodeViewProps) {
   const index = doc.pages.findIndex((p) => p.id === id);
   const number = index < 0 ? doc.settings.pageStart : pageNumber(doc, index);
   const name = String(node.attrs.name);
+  const label = mergeValue(doc, name, number);
+  useEffect(() => {
+    editor.view.dom.dispatchEvent(new Event("authoring-layout"));
+  }, [editor, label]);
   return (
     <NodeViewWrapper
       as="span"
@@ -20,7 +25,7 @@ export function MergeTagNode({ node, editor }: NodeViewProps) {
       contentEditable={false}
       title={`{${name}} — dynamic field`}
     >
-      {mergeValue(doc, name, number)}
+      {label}
     </NodeViewWrapper>
   );
 }

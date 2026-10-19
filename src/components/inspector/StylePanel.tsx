@@ -1,15 +1,20 @@
 import { themes } from "../../lib/model";
 import { useInspector } from "./context";
 export function StylePanel() {
-  const { doc, onFont, setting, allFonts } = useInspector();
+  const { doc, onFont, setting, allFonts, onDialog } = useInspector();
   return (
     <>
       <div className="panel-heading">
         <span>DOCUMENT STYLE</span>
         <span className="small-tag">{themes.length} templates</span>
       </div>
+      <section className="panel-section">
+        <button className="wide-button" onClick={() => onDialog("designs")}>
+          Manage styles and page masters
+        </button>
+      </section>
       <div className="templates">
-        {themes.map((t) => (
+        {[...themes, ...(doc.savedThemes ?? [])].map((t) => (
           <button
             className={`template ${doc.settings.theme.id === t.id ? "chosen" : ""}`}
             key={t.id}

@@ -46,7 +46,10 @@ export function usePageActions(state: WorkspaceState) {
         const pages = [...d.pages];
         const next = pages[i + 1];
         let nextId = next?.id;
-        if (next?.kind === "body" && (!next.breakBefore || next.continuedFrom === id)) {
+        if (
+          next?.kind === "body" &&
+          (!next.breakBefore || next.continuedFrom === id)
+        ) {
           pages[i + 1] = {
             ...next,
             continuedFrom: id,
@@ -61,6 +64,11 @@ export function usePageActions(state: WorkspaceState) {
             breakBefore: false,
             continuedFrom: id,
             columns: pages[i].columns,
+            masterId:
+              pages[i].masterId === "chapter-opener" ||
+              pages[i].masterId === "cover"
+                ? undefined
+                : pages[i].masterId,
           };
           pages.splice(i + 1, 0, p);
           nextId = p.id;
@@ -85,15 +93,30 @@ export function usePageActions(state: WorkspaceState) {
     (id: string, plan: BackflowPlan) => {
       update((d) => {
         const i = d.pages.findIndex((p) => p.id === id);
-        const prev = d.pages[i], source = d.pages[i + 1];
-        if (i < 0 || !prev || !source || source.id !== plan.sourceId ||
-            prev.kind !== "body" || source.kind !== "body" ||
-            source.continuedFrom !== id || source.breakBefore ||
-            JSON.stringify(source.content.content ?? []) !== JSON.stringify(plan.source)) return d;
+        const prev = d.pages[i],
+          source = d.pages[i + 1];
+        if (
+          i < 0 ||
+          !prev ||
+          !source ||
+          source.id !== plan.sourceId ||
+          prev.kind !== "body" ||
+          source.kind !== "body" ||
+          source.continuedFrom !== id ||
+          source.breakBefore ||
+          source.masterId !== prev.masterId ||
+          JSON.stringify(source.content.content ?? []) !==
+            JSON.stringify(plan.source)
+        )
+          return d;
         const pages = [...d.pages];
-        pages[i] = { ...prev, content: {
-          type: "doc", content: appendFlow(prev.content.content ?? [], plan.pulled),
-        } };
+        pages[i] = {
+          ...prev,
+          content: {
+            type: "doc",
+            content: appendFlow(prev.content.content ?? [], plan.pulled),
+          },
+        };
         const tail = [
           ...(plan.remainder ? [plan.remainder] : []),
           ...(source.content.content ?? []).slice(plan.consumed),
@@ -107,12 +130,16 @@ export function usePageActions(state: WorkspaceState) {
         }
         return { ...d, pages };
       });
-      if (active === plan.sourceId &&
-          plan.consumed === plan.source.length && !plan.remainder) {
+      if (
+        active === plan.sourceId &&
+        plan.consumed === plan.source.length &&
+        !plan.remainder
+      ) {
         setActive(id);
         setEditor(editors.current.get(id) ?? null);
       }
-    }, [update, active, editors, setActive, setEditor],
+    },
+    [update, active, editors, setActive, setEditor],
   );
   const activePage = doc.pages.find((p) => p.id === active) ?? doc.pages[0];
   const goPage = (id: string) => {
@@ -208,7 +235,9 @@ export function usePageActions(state: WorkspaceState) {
       if (
         p.kind === "body" &&
         (!buffer.length ||
-          (!p.breakBefore && p.columns === buffer[0].columns)) &&
+          (!p.breakBefore &&
+            p.columns === buffer[0].columns &&
+            p.masterId === buffer[0].masterId)) &&
         !p.background
       )
         buffer.push(p);
