@@ -1,3 +1,4 @@
+import { NamedStyleControl } from "./NamedStyleControl";
 import { useInspector } from "./context";
 import { MERGE_TAGS, mergeNode } from "../../lib/merge-tags";
 import type { MergeTagName } from "../../lib/merge-tags";
@@ -7,79 +8,165 @@ export function SelectionPanel() {
     <>
       <section className="panel-section">
         <h3>Current selection</h3>
-        <p className="help">{!editor ? "Click in a writing page to inspect its contents."
-          : image ? "Illustration"
-          : editor.isActive("table") ? "Table cell"
-          : editor.isActive("statBlock") ? "Stat block"
-          : editor.isActive("callout") ? "Callout"
-          : editor.isActive("heading") ? "Heading"
-          : editor.isActive("bulletList") || editor.isActive("orderedList") ? "List"
-          : "Paragraph"}</p>
-        {editor && <label>Insert dynamic field
-          <select aria-label="Inspector merge tag" value="" onChange={(e) =>
-            editor.chain().focus().insertContent(mergeNode(e.target.value as MergeTagName)).run()
-          }>
-            <option value="">Choose a merge tag…</option>
-            {MERGE_TAGS.map((tag) => <option key={tag.name} value={tag.name}>{`{${tag.name}}`} · {tag.label}</option>)}
-          </select>
-        </label>}
+        <p className="help">
+          {!editor
+            ? "Click in a writing page to inspect its contents."
+            : image
+              ? "Illustration"
+              : editor.isActive("table")
+                ? "Table cell"
+                : editor.isActive("statBlock")
+                  ? "Stat block"
+                  : editor.isActive("callout")
+                    ? "Callout"
+                    : editor.isActive("heading")
+                      ? "Heading"
+                      : editor.isActive("bulletList") ||
+                          editor.isActive("orderedList")
+                        ? "List"
+                        : "Paragraph"}
+        </p>
+        {editor && (
+          <label>
+            Insert dynamic field
+            <select
+              aria-label="Inspector merge tag"
+              value=""
+              onChange={(e) =>
+                editor
+                  .chain()
+                  .focus()
+                  .insertContent(mergeNode(e.target.value as MergeTagName))
+                  .run()
+              }
+            >
+              <option value="">Choose a merge tag…</option>
+              {MERGE_TAGS.map((tag) => (
+                <option key={tag.name} value={tag.name}>
+                  {`{${tag.name}}`} · {tag.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </section>
-      {editor?.isActive("heading") && <section className="panel-section">
-        <h3>Heading</h3>
-        <label>Level
-          <select aria-label="Selected heading level"
-            value={editor.getAttributes("heading").level ?? 1}
-            onChange={(e) => editor.chain().focus().updateAttributes("heading",
-              { level: Number(e.target.value) }).run()}>
-            {Array.from({ length: 9 }, (_, i) => <option key={i + 1} value={i + 1}>
-              Heading {i + 1}
-            </option>)}
-          </select>
-        </label>
-      </section>}
-      {editor && <section className="panel-section">
-        <h3>Character formatting</h3>
-        <div className="button-grid">
-          {(["bold", "italic", "underline", "strike"] as const).map((mark) =>
-            <button key={mark} aria-label={`Toggle ${mark}`}
-              aria-pressed={editor.isActive(mark)}
-              onMouseDown={(e) => e.preventDefault()}
-              className={editor.isActive(mark) ? "active" : ""}
-              onClick={() => { if (!selection.toggleMark(mark)) editor.chain().focus().toggleMark(mark).run(); }}>
-              {mark[0].toUpperCase() + mark.slice(1)}
-            </button>)}
-        </div>
-      </section>}
-      {editor && (editor.isActive("statBlock") || editor.isActive("callout")) && (
+      <NamedStyleControl />
+      {editor?.isActive("heading") && (
         <section className="panel-section">
-          <h3>Selected layout box</h3>
-          {(() => {
-            const type = editor.isActive("statBlock") ? "statBlock" : "callout";
-            const attrs = editor.getAttributes(type);
-            return <>
-              <label>Box width · {attrs.width ?? 100}%
-                <input type="range" min="20" max="100" value={attrs.width ?? 100}
-                  onChange={(e) => editor.chain().focus().updateAttributes(type,
-                    { width: Number(e.target.value) }).run()}/>
-              </label>
-              <label>Flow around box
-                <select value={attrs.flow ?? "block"} onChange={(e) =>
-                  editor.chain().focus().updateAttributes(type, { flow: e.target.value }).run()}>
-                  <option value="block">Block</option>
-                  <option value="left">Wrap on right</option>
-                  <option value="right">Wrap on left</option>
-                </select>
-              </label>
-              <label className="check">
-                <input type="checkbox" checked={!!attrs.wide}
-                  onChange={(e) => editor.chain().focus().updateAttributes(type,
-                    { wide: e.target.checked }).run()}/>
-                Span columns
-              </label>
-            </>;
-          })()}
+          <h3>Heading</h3>
+          <label>
+            Level
+            <select
+              aria-label="Selected heading level"
+              value={editor.getAttributes("heading").level ?? 1}
+              onChange={(e) =>
+                editor
+                  .chain()
+                  .focus()
+                  .updateAttributes("heading", {
+                    level: Number(e.target.value),
+                  })
+                  .run()
+              }
+            >
+              {Array.from({ length: 9 }, (_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  Heading {i + 1}
+                </option>
+              ))}
+            </select>
+          </label>
         </section>
       )}
+      {editor && (
+        <section className="panel-section">
+          <h3>Character formatting</h3>
+          <div className="button-grid">
+            {(["bold", "italic", "underline", "strike"] as const).map(
+              (mark) => (
+                <button
+                  key={mark}
+                  aria-label={`Toggle ${mark}`}
+                  aria-pressed={editor.isActive(mark)}
+                  onMouseDown={(e) => e.preventDefault()}
+                  className={editor.isActive(mark) ? "active" : ""}
+                  onClick={() => {
+                    if (!selection.toggleMark(mark))
+                      editor.chain().focus().toggleMark(mark).run();
+                  }}
+                >
+                  {mark[0].toUpperCase() + mark.slice(1)}
+                </button>
+              ),
+            )}
+          </div>
+        </section>
+      )}
+      {editor &&
+        (editor.isActive("statBlock") || editor.isActive("callout")) && (
+          <section className="panel-section">
+            <h3>Selected layout box</h3>
+            {(() => {
+              const type = editor.isActive("statBlock")
+                ? "statBlock"
+                : "callout";
+              const attrs = editor.getAttributes(type);
+              return (
+                <>
+                  <label>
+                    Box width · {attrs.width ?? 100}%
+                    <input
+                      type="range"
+                      min="20"
+                      max="100"
+                      value={attrs.width ?? 100}
+                      onChange={(e) =>
+                        editor
+                          .chain()
+                          .focus()
+                          .updateAttributes(type, {
+                            width: Number(e.target.value),
+                          })
+                          .run()
+                      }
+                    />
+                  </label>
+                  <label>
+                    Flow around box
+                    <select
+                      value={attrs.flow ?? "block"}
+                      onChange={(e) =>
+                        editor
+                          .chain()
+                          .focus()
+                          .updateAttributes(type, { flow: e.target.value })
+                          .run()
+                      }
+                    >
+                      <option value="block">Block</option>
+                      <option value="left">Wrap on right</option>
+                      <option value="right">Wrap on left</option>
+                    </select>
+                  </label>
+                  <label className="check">
+                    <input
+                      type="checkbox"
+                      checked={!!attrs.wide}
+                      onChange={(e) =>
+                        editor
+                          .chain()
+                          .focus()
+                          .updateAttributes(type, { wide: e.target.checked })
+                          .run()
+                      }
+                    />
+                    Span columns
+                  </label>
+                </>
+              );
+            })()}
+          </section>
+        )}
       {editor && !image && (
         <section className="panel-section">
           <h3>Selected paragraph</h3>
@@ -238,12 +325,22 @@ export function SelectionPanel() {
         <section className="panel-section">
           <h3>Selected table</h3>
           <label className="check">
-            <input type="checkbox" checked={!!editor.getAttributes("table").wide}
-              onChange={(e) => editor.chain().focus().updateAttributes("table",
-                { wide: e.target.checked }).run()}/>
+            <input
+              type="checkbox"
+              checked={!!editor.getAttributes("table").wide}
+              onChange={(e) =>
+                editor
+                  .chain()
+                  .focus()
+                  .updateAttributes("table", { wide: e.target.checked })
+                  .run()
+              }
+            />
             Full page width
           </label>
-          <p className="help">Span all page columns. Drag a column edge to resize it.</p>
+          <p className="help">
+            Span all page columns. Drag a column edge to resize it.
+          </p>
           <div className="button-grid">
             <button onClick={() => editor.chain().focus().addRowAfter().run()}>
               + Row
@@ -279,4 +376,3 @@ export function SelectionPanel() {
     </>
   );
 }
-

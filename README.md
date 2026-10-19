@@ -53,6 +53,20 @@ npm run deploy
 - Page cards can be selected, dragged, moved, duplicated and deleted. Body overflow moves forward automatically. **Reflow body pages** closes gaps in automatic continuations after deletions or style changes. Explicit page breaks and pages with background art form boundaries. An individual unbreakable block that exceeds a column must be shortened/resized.
 - Find and replace across text runs, print preview, browser printing and per-page undo/redo. Find does not join matches across differently formatted text runs. Named versions are the document-wide restore mechanism.
 
+## Outline, references, and reusable content
+
+Use **Outline** beside the page thumbnails to collapse headings, jump to a section, move it up/down or drag it before another section, and duplicate it. A section includes its subheadings and content across body pages, ending at the next heading of the same/higher level or a non-body page. Structural changes create a named restore point. Existing manual pages and their artwork remain in place while moved content reflows.
+
+**Insert → Cross-reference** links to headings, creatures, encounters, tables, images, and reusable blocks. Choose title, page number, or both. Targets retain stable identities when moved or renamed. The inspector can give a target an optional reference name. Missing destinations are marked inline and listed in the outline. Duplicating sections remaps references inside the duplicate to its copied targets.
+
+**Content library** stores searchable, categorized entries on this device and embeds used entries in project backups. Save the selected content or current block, then insert an independent copy or a linked instance. Edit an entry in the library, or edit an instance on the page and choose **Save current content**. **Review changes** shows the new text and every current linked instance before replacement. Updating an entry replaces linked instances in the current adventure, including local edits, and retains a restore point. Other projects are never silently rewritten; the latest device-library entry can be reviewed and applied there. Linked blocks stay together on a page; insert an independent copy for content that needs to flow across pages.
+
+## Saved styles and page masters
+
+**Style → Manage styles and page masters** creates or edits named paragraph/block styles, page masters, and custom color/font themes. Designs are saved locally for reuse and included in project backups. Apply a named style in the contextual inspector. Changes to its definition update its uses in the document.
+
+Choose a default body master in **Document**, or override it for a selected page in **Page**. Masters support one to three columns, mirrored binding margins, alternating running headers, configurable footers, page-number visibility, paper color, and reusable background artwork. Built-ins include a mirrored book body, a chapter opener, and a cover. Use the selected page's uploaded artwork to create a master background. Page-specific columns and artwork override the master. Running text supports `{chapter}` as well as the existing document merge fields. Custom fonts must be included in a project to travel with its design.
+
 ## Local saves and portable projects
 
 IndexedDB stores manuscripts and named versions asynchronously. The current draft autosaves after a short debounce. Projects are listed in the Projects dialog. Named versions are explicit checkpoints and restoring one first retains the outgoing draft.
@@ -74,13 +88,14 @@ Imports keep the outgoing project and make a named checkpoint. Imported HTML is 
 
 | Edition                     | Layout fidelity                                                                                                                  | Editable/selectable text                                      |
 | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| PDF                         | Exact page canvas at 2.5× resolution, including art and fonts                                                                    | Page images, not selectable text                              |
+| PDF — searchable            | Rendered page appearance plus a positioned text layer, links, and heading bookmarks                                              | Selectable/searchable text with an embedded Unicode font      |
+| PDF — exact appearance      | Exact page canvas at 2.5× resolution, including art and fonts                                                                    | Page images, not selectable text                              |
 | DOCX — exact appearance     | One full-page image per Word page                                                                                                | Page images, not editable text                                |
 | DOCX — editable             | Structured headings 1–9, paragraphs, inline formatting, lists, links, tables, boxed blocks, images, sections/columns and footers | Editable; Word can reflow layout and substitute missing fonts |
 | Browser print / Save as PDF | Browser print rendering, with CSS backgrounds enabled and browser headers/footers disabled                                       | Selectable text and links                                     |
 | Project JSON                | Lossless editable source for this app                                                                                            | Full editor data                                              |
 
-Exports stop with an actionable message if an image cannot be fetched or content still overflows. Exact-appearance exports use the same visible page DOM. They are deliberately flattened to make PDF/DOCX layout consistent. The editable DOCX is a separate publishing choice, not a promise of identical Word pagination. Custom fonts are not embedded in editable DOCX. Contents/index references in editable DOCX are the editor's static page references and should be refreshed manually if Word reflows the file.
+Exports stop with an actionable message if an image cannot be fetched or content still overflows. Exact-appearance exports use the same visible page DOM. The exact-appearance editions are deliberately flattened to make PDF/DOCX layout consistent. Searchable PDF preserves that rendered appearance and adds an invisible, positioned text layer, working external/internal links, and hierarchical heading bookmarks. It is not a tagged-accessibility PDF or a vector-only edition. The editable DOCX is a separate publishing choice, not a promise of identical Word pagination. Custom fonts are not embedded in editable DOCX. Contents/index references in editable DOCX are the editor's static page references and should be refreshed manually if Word reflows the file.
 
 ## Architecture
 

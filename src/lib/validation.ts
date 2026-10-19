@@ -1,3 +1,5 @@
+import { validateAuthoring } from "./authoring-validation";
+import { identifyDocument } from "./anchors";
 import type { Adventure } from "./types";
 import { sizes, themes } from "./templates";
 import { createAdventure, uid } from "./documents";
@@ -49,7 +51,10 @@ export function validateAdventure(value: unknown): Adventure {
     )
       d.settings.theme[key] = themes[0][key];
   for (const p of d.pages) {
-    if (p.continuedFrom && (typeof p.continuedFrom !== "string" || p.continuedFrom === p.id))
+    if (
+      p.continuedFrom &&
+      (typeof p.continuedFrom !== "string" || p.continuedFrom === p.id)
+    )
       delete p.continuedFrom;
     p.columns =
       p.columns === undefined
@@ -96,5 +101,6 @@ export function validateAdventure(value: unknown): Adventure {
     ? d.indexTerms.filter((t) => typeof t === "string")
     : [];
   d.id = typeof d.id === "string" ? d.id : uid();
-  return d;
+  validateAuthoring(d);
+  return identifyDocument(d);
 }

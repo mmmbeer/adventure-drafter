@@ -81,7 +81,8 @@ export function Toolbar({
     if (!selection.format(fn) && editor) fn(editor);
   };
   const toggleMark = (name: string, attrs?: Record<string, unknown>) => {
-    if (!selection.toggleMark(name, attrs)) editor?.chain().focus().toggleMark(name, attrs).run();
+    if (!selection.toggleMark(name, attrs))
+      editor?.chain().focus().toggleMark(name, attrs).run();
   };
   const block = (type: string) => {
     if (!editor) return;
@@ -89,9 +90,12 @@ export function Toolbar({
     if (type === "table")
       c.insertTable({ rows: 4, cols: 3, withHeaderRow: true }).run();
     else if (type === "statBlock" || type === "magicItem")
-      c.insertContent(makeTemplate(type === "statBlock" ? "creature" : "magicItem")).run();
+      c.insertContent(
+        makeTemplate(type === "statBlock" ? "creature" : "magicItem"),
+      ).run();
     else if (type === "columnBreak")
       c.insertContent({ type: "columnBreak" }).run();
+    else if (type === "reference" || type === "library") onDialog(type);
     else if (type === "image") onDialog("image");
     else if (type === "page") onInsertPage();
     else if (type === "rule") c.setHorizontalRule().run();
@@ -107,14 +111,18 @@ export function Toolbar({
         <Tool
           label="Undo (Ctrl+Z)"
           disabled={!selection.canUndo() && !editor?.can().undo()}
-          onClick={() => { if (!selection.history()) editor?.chain().focus().undo().run(); }}
+          onClick={() => {
+            if (!selection.history()) editor?.chain().focus().undo().run();
+          }}
         >
           <Undo2 size={16} />
         </Tool>
         <Tool
           label="Redo (Ctrl+Shift+Z)"
           disabled={!selection.canRedo() && !editor?.can().redo()}
-          onClick={() => { if (!selection.history(true)) editor?.chain().focus().redo().run(); }}
+          onClick={() => {
+            if (!selection.history(true)) editor?.chain().focus().redo().run();
+          }}
         >
           <Redo2 size={16} />
         </Tool>
@@ -152,7 +160,9 @@ export function Toolbar({
           disabled={!editor}
           value={editor?.getAttributes("textStyle").fontFamily || ""}
           onChange={(e) =>
-            command((ed) => ed.chain().focus().setFontFamily(e.target.value).run())
+            command((ed) =>
+              ed.chain().focus().setFontFamily(e.target.value).run(),
+            )
           }
         >
           <option value="">Document font</option>
@@ -165,7 +175,9 @@ export function Toolbar({
           disabled={!editor}
           value={editor?.getAttributes("textStyle").fontSize || ""}
           onChange={(e) =>
-            command((ed) => ed.chain().focus().setFontSize(e.target.value).run())
+            command((ed) =>
+              ed.chain().focus().setFontSize(e.target.value).run(),
+            )
           }
         >
           <option value="">Auto</option>
@@ -191,9 +203,7 @@ export function Toolbar({
               key={String(mark)}
               label={String(label)}
               active={editor?.isActive(String(mark))}
-              onClick={() =>
-                toggleMark(String(mark))
-              }
+              onClick={() => toggleMark(String(mark))}
             >
               <I size={16} />
             </Tool>
@@ -202,9 +212,7 @@ export function Toolbar({
         <Tool
           label="Highlight"
           active={editor?.isActive("highlight")}
-          onClick={() =>
-            toggleMark("highlight", { color: "#f5d681" })
-          }
+          onClick={() => toggleMark("highlight", { color: "#f5d681" })}
         >
           <Highlighter size={16} />
         </Tool>
@@ -215,7 +223,9 @@ export function Toolbar({
             type="color"
             defaultValue="#823a32"
             onInput={(e) =>
-              command((ed) => ed.chain().focus().setColor(e.currentTarget.value).run())
+              command((ed) =>
+                ed.chain().focus().setColor(e.currentTarget.value).run(),
+              )
             }
           />
         </label>
@@ -234,7 +244,9 @@ export function Toolbar({
               label={`Align ${align}`}
               active={editor?.isActive({ textAlign: align })}
               onClick={() =>
-                command((ed) => ed.chain().focus().setTextAlign(String(align)).run())
+                command((ed) =>
+                  ed.chain().focus().setTextAlign(String(align)).run(),
+                )
               }
             >
               <I size={16} />
@@ -244,14 +256,18 @@ export function Toolbar({
         <Tool
           label="Bullet list"
           active={editor?.isActive("bulletList")}
-          onClick={() => command((ed) => ed.chain().focus().toggleBulletList().run())}
+          onClick={() =>
+            command((ed) => ed.chain().focus().toggleBulletList().run())
+          }
         >
           <List size={16} />
         </Tool>
         <Tool
           label="Numbered list"
           active={editor?.isActive("orderedList")}
-          onClick={() => command((ed) => ed.chain().focus().toggleOrderedList().run())}
+          onClick={() =>
+            command((ed) => ed.chain().focus().toggleOrderedList().run())
+          }
         >
           <ListOrdered size={16} />
         </Tool>
@@ -266,20 +282,26 @@ export function Toolbar({
         </Tool>
         <Tool
           label="Superscript"
-          onClick={() => command((ed) => ed.chain().focus().toggleSuperscript().run())}
+          onClick={() =>
+            command((ed) => ed.chain().focus().toggleSuperscript().run())
+          }
         >
           <Superscript size={16} />
         </Tool>
         <Tool
           label="Subscript"
-          onClick={() => command((ed) => ed.chain().focus().toggleSubscript().run())}
+          onClick={() =>
+            command((ed) => ed.chain().focus().toggleSubscript().run())
+          }
         >
           <Subscript size={16} />
         </Tool>
         <Tool
           label="Clear formatting"
           onClick={() =>
-            command((ed) => ed.chain().focus().unsetAllMarks().clearNodes().run())
+            command((ed) =>
+              ed.chain().focus().unsetAllMarks().clearNodes().run(),
+            )
           }
         >
           <RemoveFormatting size={16} />
@@ -321,6 +343,8 @@ export function Toolbar({
         onChange={(e) => block(e.target.value)}
       >
         <option value="">+ Insert</option>
+        <option value="reference">Cross-reference</option>
+        <option value="library">Reusable content</option>
         <option value="readaloud">Read-aloud box</option>
         <option value="aside">Aside / GM notes</option>
         <option value="encounter">Encounter</option>
@@ -340,13 +364,16 @@ export function Toolbar({
         value=""
         onChange={(event) => {
           const name = event.target.value as MergeTagName;
-          if (name) editor?.chain().focus().insertContent(mergeNode(name)).run();
+          if (name)
+            editor?.chain().focus().insertContent(mergeNode(name)).run();
         }}
       >
         <option value="">{"{ } Fields"}</option>
-        {MERGE_TAGS.map((tag) => <option value={tag.name} key={tag.name}>
-          {`{${tag.name}}`} · {tag.label}
-        </option>)}
+        {MERGE_TAGS.map((tag) => (
+          <option value={tag.name} key={tag.name}>
+            {`{${tag.name}}`} · {tag.label}
+          </option>
+        ))}
       </select>
       <button
         className="index-selection"
@@ -359,4 +386,3 @@ export function Toolbar({
     </div>
   );
 }
-

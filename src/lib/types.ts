@@ -1,10 +1,12 @@
 import type { JSONContent } from "@tiptap/core";
+import type { LibraryEntry, NamedStyle, PageMaster } from "./authoring-types";
 export type PageKind = "body" | "title" | "toc" | "index";
 export interface Page {
   id: string;
   kind: PageKind;
   content: JSONContent;
   columns?: number;
+  masterId?: string;
   background?: string;
   backgroundOpacity?: number;
   hideNumber?: boolean;
@@ -44,7 +46,12 @@ export interface Adventure {
     tocDepth: number;
     autoIndexHeadings?: boolean;
     indexDepth?: number;
+    defaultMasterId?: string;
   };
+  contentLibrary?: LibraryEntry[];
+  namedStyles?: NamedStyle[];
+  pageMasters?: PageMaster[];
+  savedThemes?: Theme[];
   indexTerms: string[];
   fonts: { name: string; data: string }[];
 }

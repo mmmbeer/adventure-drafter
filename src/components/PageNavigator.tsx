@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { OutlinePanel } from "./OutlinePanel";
+import { cloneBlocks } from "../lib/anchors";
 import {
   Plus,
   ChevronDown,
@@ -13,6 +16,7 @@ import {
 import { uid, nodeText, pageNumber, type PageKind } from "../lib/model";
 import { useDesk } from "../state/context";
 export function PageNavigator() {
+  const [navigation, setNavigation] = useState("pages");
   const {
     doc,
     setDialog,
@@ -47,118 +51,147 @@ export function PageNavigator() {
         <BookOpen size={17} />
         <b>{doc.title}</b>
       </div>
-      <div className="page-list">
-        {doc.pages.map((p, i) => (
-          <div
-            key={p.id}
-            className={`page-card ${activePage.id === p.id ? "current" : ""}`}
-            draggable
-            onDragStart={() => (dragging.current = p.id)}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => {
-              e.preventDefault();
-              const from = dragging.current;
-              update((d) => {
-                const pages = d.pages.filter((p) => p.id !== from);
-                const target = pages.findIndex((x) => x.id === p.id);
-                pages.splice(
-                  Math.max(0, target),
-                  0,
-                  d.pages.find((p) => p.id === from)!,
-                );
-                return { ...d, pages };
-              });
-            }}
-          >
-            <button className="page-pick" onClick={() => goPage(p.id)}>
-              <span
-                className={`page-mini ${p.kind}`}
-                style={{
-                  background: doc.settings.theme.paper,
-                  color: doc.settings.theme.accent,
-                }}
-              >
-                <span>
-                  {p.kind === "title"
-                    ? "✧"
-                    : p.kind === "toc"
-                      ? "≡"
-                      : p.kind === "index"
-                        ? "A–Z"
-                        : pageNumber(doc, i)}
-                </span>
-                <i />
-                <i />
-                <i />
-                <i />
-              </span>
-              <span className="page-card-title">
-                <b>
-                  {p.kind === "body"
-                    ? nodeText(
-                        p.content.content?.find((n) => n.type === "heading") ??
-                          p.content,
-                      ).slice(0, 35) || "Untitled page"
-                    : p.kind === "title"
-                      ? "Title page"
-                      : p.kind === "toc"
-                        ? "Table of contents"
-                        : "Keyword index"}
-                </b>
-                <small>
-                  {p.kind === "body"
-                    ? "Adventure page"
-                    : p.kind === "title"
-                      ? "Cover"
-                      : "Generated page"}{" "}
-                  · {i + 1}
-                </small>
-              </span>
-            </button>
-            <div className="page-actions">
-              <button
-                aria-label={`Move page ${i + 1} up`}
-                disabled={!i}
-                onClick={() => move(p.id, -1)}
-              >
-                <ChevronUp size={13} />
-              </button>
-              <button
-                aria-label={`Move page ${i + 1} down`}
-                disabled={i === doc.pages.length - 1}
-                onClick={() => move(p.id, 1)}
-              >
-                <ChevronDown size={13} />
-              </button>
-              <button
-                aria-label={`Duplicate page ${i + 1}`}
-                onClick={() =>
-                  update((d) => {
-                    const pages = [...d.pages];
-                    pages.splice(i + 1, 0, {
-                      ...structuredClone(p),
-                      id: uid(),
-                    });
-                    return { ...d, pages };
-                  })
-                }
-              >
-                <Copy size={12} />
-              </button>
-              <button
-                aria-label={`Delete page ${i + 1}`}
-                disabled={doc.pages.length === 1}
-                onClick={() => {
-                  setDeleteTarget({ type: "page", id: p.id });
-                  setDialog("delete");
-                }}
-              >
-                <Trash2 size={12} />
-              </button>
-            </div>
-          </div>
-        ))}
+      <div
+        className="navigator-tabs"
+        role="tablist"
+        aria-label="Manuscript navigation"
+      >
+        <button
+          role="tab"
+          aria-selected={navigation === "pages"}
+          onClick={() => setNavigation("pages")}
+        >
+          Pages
+        </button>
+        <button
+          role="tab"
+          aria-selected={navigation === "outline"}
+          onClick={() => setNavigation("outline")}
+        >
+          Outline
+        </button>
       </div>
+      {navigation === "outline" ? (
+        <OutlinePanel />
+      ) : (
+        <div className="page-list">
+          {doc.pages.map((p, i) => (
+            <div
+              key={p.id}
+              className={`page-card ${activePage.id === p.id ? "current" : ""}`}
+              draggable
+              onDragStart={() => (dragging.current = p.id)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                const from = dragging.current;
+                update((d) => {
+                  const pages = d.pages.filter((p) => p.id !== from);
+                  const target = pages.findIndex((x) => x.id === p.id);
+                  pages.splice(
+                    Math.max(0, target),
+                    0,
+                    d.pages.find((p) => p.id === from)!,
+                  );
+                  return { ...d, pages };
+                });
+              }}
+            >
+              <button className="page-pick" onClick={() => goPage(p.id)}>
+                <span
+                  className={`page-mini ${p.kind}`}
+                  style={{
+                    background: doc.settings.theme.paper,
+                    color: doc.settings.theme.accent,
+                  }}
+                >
+                  <span>
+                    {p.kind === "title"
+                      ? "✧"
+                      : p.kind === "toc"
+                        ? "≡"
+                        : p.kind === "index"
+                          ? "A–Z"
+                          : pageNumber(doc, i)}
+                  </span>
+                  <i />
+                  <i />
+                  <i />
+                  <i />
+                </span>
+                <span className="page-card-title">
+                  <b>
+                    {p.kind === "body"
+                      ? nodeText(
+                          p.content.content?.find(
+                            (n) => n.type === "heading",
+                          ) ?? p.content,
+                        ).slice(0, 35) || "Untitled page"
+                      : p.kind === "title"
+                        ? "Title page"
+                        : p.kind === "toc"
+                          ? "Table of contents"
+                          : "Keyword index"}
+                  </b>
+                  <small>
+                    {p.kind === "body"
+                      ? "Adventure page"
+                      : p.kind === "title"
+                        ? "Cover"
+                        : "Generated page"}{" "}
+                    · {i + 1}
+                  </small>
+                </span>
+              </button>
+              <div className="page-actions">
+                <button
+                  aria-label={`Move page ${i + 1} up`}
+                  disabled={!i}
+                  onClick={() => move(p.id, -1)}
+                >
+                  <ChevronUp size={13} />
+                </button>
+                <button
+                  aria-label={`Move page ${i + 1} down`}
+                  disabled={i === doc.pages.length - 1}
+                  onClick={() => move(p.id, 1)}
+                >
+                  <ChevronDown size={13} />
+                </button>
+                <button
+                  aria-label={`Duplicate page ${i + 1}`}
+                  onClick={() =>
+                    update((d) => {
+                      const pages = [...d.pages];
+                      pages.splice(i + 1, 0, {
+                        ...structuredClone(p),
+                        id: uid(),
+                        content: {
+                          type: "doc",
+                          content: cloneBlocks(p.content.content ?? []),
+                        },
+                      });
+                      return { ...d, pages };
+                    })
+                  }
+                >
+                  <Copy size={12} />
+                </button>
+                <button
+                  aria-label={`Delete page ${i + 1}`}
+                  disabled={doc.pages.length === 1}
+                  onClick={() => {
+                    setDeleteTarget({ type: "page", id: p.id });
+                    setDialog("delete");
+                  }}
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       <div className="add-page-wrap">
         <button className="add-page" onClick={() => setPageMenu(!pageMenu)}>
           <Plus size={16} /> Add page <ChevronDown size={13} />
@@ -180,6 +213,7 @@ export function PageNavigator() {
         )}
       </div>
       <div className="navigator-bottom">
+        <button onClick={() => openDialog("library")}>Content library</button>
         <button onClick={reflow}>
           <LayoutTemplate size={15} /> Reflow body pages
         </button>

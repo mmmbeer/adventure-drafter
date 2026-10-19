@@ -1,3 +1,4 @@
+import { identifyDocument } from "../lib/anchors";
 import { useState, useRef, useCallback, useEffect } from "react";
 import {
   createAdventure,
@@ -10,14 +11,19 @@ export function useLocalDraft(
   report: (message: string) => void,
   onLoaded: (id: string) => void,
 ) {
-  const [doc, setDoc] = useState<Adventure>(createAdventure);
+  const [doc, setDoc] = useState<Adventure>(() =>
+    identifyDocument(createAdventure()),
+  );
   const docRef = useRef(doc);
   docRef.current = doc;
   const [ready, setReady] = useState(false);
   const [status, setStatus] = useState("Opening…");
   const savePending = useRef(false);
   const update = useCallback((fn: (d: Adventure) => Adventure) => {
-    setDoc((d) => ({ ...fn(d), updatedAt: new Date().toISOString() }));
+    setDoc((d) => ({
+      ...identifyDocument(fn(d)),
+      updatedAt: new Date().toISOString(),
+    }));
   }, []);
   useEffect(() => {
     loadLast()

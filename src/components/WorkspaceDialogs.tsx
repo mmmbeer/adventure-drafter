@@ -1,3 +1,6 @@
+import { DesignsDialog } from "./dialogs/DesignsDialog";
+import { LibraryDialog } from "./dialogs/LibraryDialog";
+import { ReferenceDialog } from "./dialogs/ReferenceDialog";
 import { DocumentsDialog } from "./dialogs/DocumentsDialog";
 import { ImportDialog } from "./dialogs/ImportDialog";
 import { ImportReportDialog } from "./dialogs/ImportReportDialog";
@@ -17,6 +20,9 @@ export function WorkspaceDialogs() {
       title={
         (
           {
+            reference: "Cross-reference",
+            library: "Reusable content library",
+            designs: "Styles and page masters",
             documents: "Your adventures",
             import: "Import an adventure",
             "import-report": "Import review",
@@ -33,13 +39,16 @@ export function WorkspaceDialogs() {
       }
       onClose={() => setDialog("")}
       size={
-        dialog === "documents" || dialog === "help"
+        ["documents", "help", "library", "designs"].includes(dialog)
           ? "wide"
           : dialog === "delete" || dialog === "link"
             ? "small"
             : "normal"
       }
     >
+      {dialog === "designs" ? <DesignsDialog /> : null}
+      {dialog === "library" ? <LibraryDialog /> : null}
+      {dialog === "reference" ? <ReferenceDialog /> : null}
       {dialog === "documents" ? <DocumentsDialog /> : null}
       {dialog === "import" ? <ImportDialog /> : null}
       {dialog === "import-report" ? <ImportReportDialog /> : null}

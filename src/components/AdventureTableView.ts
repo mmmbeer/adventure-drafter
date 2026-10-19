@@ -24,6 +24,11 @@ export class AdventureTableView extends TableView {
   private syncLayout(node: Node) {
     const wide = String(!!node.attrs.wide);
     this.dom.dataset.wide = wide;
+    this.dom.dataset.styleId = node.attrs.styleId || "";
+    this.dom.dataset.refId = node.attrs.refId || "";
+    this.table.removeAttribute("id");
+    this.table.removeAttribute("data-ref-id");
+    if (node.attrs.refId) this.dom.id = `ref-${node.attrs.refId}`;
     this.table.dataset.wide = wide;
   }
 }

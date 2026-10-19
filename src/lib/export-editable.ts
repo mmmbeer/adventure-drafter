@@ -1,3 +1,5 @@
+import { pageDesign } from "./designs";
+import { referenceValue } from "./cross-references";
 import {
   Document,
   Paragraph,
@@ -20,8 +22,14 @@ import {
   ExternalHyperlink,
 } from "docx";
 import type { JSONContent } from "@tiptap/core";
-import { entries, keywordIndex, sizes, pageNumber, type Adventure } from "./model";
-import { mergeValue, interpolateMergeTags } from "./merge-tags";
+import {
+  entries,
+  keywordIndex,
+  sizes,
+  pageNumber,
+  type Adventure,
+} from "./model";
+import { mergeValue } from "./merge-tags";
 import { download, filename } from "./export";
 export async function exportEditable(
   doc: Adventure,
@@ -64,7 +72,10 @@ export async function exportEditable(
   function runs(nodes: JSONContent[] = []): (TextRun | ExternalHyperlink)[] {
     return nodes.flatMap((n) => {
       if (n.type === "hardBreak") return [new TextRun({ break: 1 })];
-      if (n.type === "mergeTag") return [new TextRun(mergeValue(doc, n.attrs?.name || "", currentPage))];
+      if (n.type === "crossReference")
+        return [new TextRun(referenceValue(doc, n.attrs ?? {}))];
+      if (n.type === "mergeTag")
+        return [new TextRun(mergeValue(doc, n.attrs?.name || "", currentPage))];
       if (n.type !== "text") return runs(n.content);
       const m = (type: string) => n.marks?.find((m) => m.type === type);
       const run = new TextRun({
@@ -223,9 +234,10 @@ export async function exportEditable(
         new Paragraph({
           children: runs(n.content),
           style:
-            n.type === "heading"
+            n.attrs?.styleId ||
+            (n.type === "heading"
               ? `AdventureHeading${n.attrs?.level || 1}`
-              : undefined,
+              : undefined),
           alignment:
             (
               {
@@ -270,6 +282,7 @@ export async function exportEditable(
   for (let i = 0; i < doc.pages.length; i++) {
     progress(`Converting page ${i + 1}…`);
     const p = doc.pages[i];
+    const design = pageDesign(doc, p, i);
     currentPage = pageNumber(doc, i);
     let children: (Paragraph | Table)[] = [];
     if (p.kind === "toc") {
@@ -296,10 +309,10 @@ export async function exportEditable(
       children = (
         await Promise.all((p.content.content ?? []).map((c) => convert(c)))
       ).flat();
-    if (p.background) {
+    if (design.background) {
       const background = await pngImage(
-        p.background,
-        p.backgroundOpacity ?? 0.22,
+        design.background!,
+        design.backgroundOpacity,
       );
       children.unshift(
         new Paragraph({
@@ -332,23 +345,28 @@ export async function exportEditable(
           count:
             p.kind === "title" || p.kind === "toc" || p.kind === "index"
               ? 1
-              : (p.columns ?? doc.settings.columns),
+              : design.columns,
           space: doc.settings.gutter * 15,
         },
         page: {
           size: { width: sz.width * 15, height: sz.height * 15 },
           margin: {
-            top: doc.settings.margin * 15,
-            bottom: doc.settings.margin * 15,
-            left: doc.settings.margin * 15,
-            right: doc.settings.margin * 15,
+            top: design.margin * 15,
+            bottom: design.margin * 15,
+            left: design.left * 15,
+            right: design.right * 15,
           },
           pageNumbers: i === 0 ? { start: doc.settings.pageStart } : undefined,
         },
       },
       headers: {
         default: new Header({
-          children: [new Paragraph({ text: doc.title, style: "RunningText" })],
+          children: [
+            new Paragraph({
+              text: design.hideHeader ? "" : design.header,
+              style: "RunningText",
+            }),
+          ],
         }),
       },
       footers: {
@@ -357,8 +375,8 @@ export async function exportEditable(
             new Paragraph({
               alignment: AlignmentType.CENTER,
               children: [
-                new TextRun(`${interpolateMergeTags(doc.settings.footer || doc.author, doc, currentPage)}   `),
-                ...(!p.hideNumber && p.kind !== "title"
+                new TextRun(`${design.footer}   `),
+                ...(!design.hideNumber && p.kind !== "title"
                   ? [new TextRun({ children: [PageNumber.CURRENT] })]
                   : []),
               ],
@@ -383,6 +401,26 @@ export async function exportEditable(
         },
       },
       paragraphStyles: [
+        ...(doc.namedStyles ?? []).map((s) => ({
+          id: s.id,
+          name: s.name,
+          basedOn: "Normal",
+          quickFormat: true,
+          run: {
+            font: s.fontFamily,
+            size: s.fontSize * 1.5,
+            color: color(s.color),
+            bold: s.bold,
+            italics: s.italic,
+          },
+          paragraph: {
+            spacing: {
+              before: s.spaceBefore * 15,
+              after: s.spaceAfter * 15,
+              line: s.lineHeight * 240,
+            },
+          },
+        })),
         {
           id: "RunningText",
           name: "Running text",

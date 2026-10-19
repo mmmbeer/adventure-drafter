@@ -1,4 +1,9 @@
 import {
+  AuthoringAttributes,
+  CrossReference,
+  ReusableBlock,
+} from "./authoring-extensions";
+import {
   Node,
   Extension,
   mergeAttributes,
@@ -95,7 +100,12 @@ const StatBlock = Node.create({
   content: "block+",
   defining: true,
   addAttributes() {
-    return { kind: { default: "creature", parseHTML: (e) => e.dataset.kind || "creature" } };
+    return {
+      kind: {
+        default: "creature",
+        parseHTML: (e) => e.dataset.kind || "creature",
+      },
+    };
   },
   parseHTML() {
     return [{ tag: "section[data-statblock]" }];
@@ -106,7 +116,10 @@ const StatBlock = Node.create({
   renderHTML({ HTMLAttributes }) {
     return [
       "section",
-      mergeAttributes(HTMLAttributes, { "data-statblock": "", "data-kind": HTMLAttributes.kind }),
+      mergeAttributes(HTMLAttributes, {
+        "data-statblock": "",
+        "data-kind": HTMLAttributes.kind,
+      }),
       0,
     ];
   },
@@ -118,48 +131,74 @@ const MergeTag = Node.create({
   atom: true,
   selectable: false,
   addAttributes() {
-    return { name: {
-      default: "title",
-      parseHTML: (e) => e.getAttribute("data-merge-tag") || "title",
-      renderHTML: (attrs) => ({ "data-merge-tag": attrs.name }),
-    } };
+    return {
+      name: {
+        default: "title",
+        parseHTML: (e) => e.getAttribute("data-merge-tag") || "title",
+        renderHTML: (attrs) => ({ "data-merge-tag": attrs.name }),
+      },
+    };
   },
-  parseHTML() { return [{ tag: "span[data-merge-tag]" }]; },
+  parseHTML() {
+    return [{ tag: "span[data-merge-tag]" }];
+  },
   renderHTML({ node, HTMLAttributes }) {
     const name = validMergeTag(node.attrs.name) ? node.attrs.name : "title";
-    return ["span", mergeAttributes(HTMLAttributes, {
-      "data-merge-tag": name, class: "merge-tag",
-    }), `{${name}}`];
+    return [
+      "span",
+      mergeAttributes(HTMLAttributes, {
+        "data-merge-tag": name,
+        class: "merge-tag",
+      }),
+      `{${name}}`,
+    ];
   },
-  addNodeView() { return ReactNodeViewRenderer(MergeTagNode); },
+  addNodeView() {
+    return ReactNodeViewRenderer(MergeTagNode);
+  },
   addProseMirrorPlugins() {
-    return [new Plugin({
-      props: {
-        handleTextInput(view, from, to, text) {
-          // Input rules run before the final '}' reaches the document.
-          // For inline atoms, nodeInputRule inserts a node without reliably
-          // deleting the source token. Consume the entire pending token here.
-          if (text !== "}" || !view.editable) return false;
-          const $from = view.state.doc.resolve(from);
-          if (!$from.parent.isTextblock) return false;
-          const before = $from.parent.textBetween(0, $from.parentOffset, undefined, "\uFFFC");
-          const match = /\{(title|subtitle|author|page|pages|footer)$/.exec(before);
-          if (!match) return false;
-          const node = view.state.schema.nodes.mergeTag.create({ name: match[1] });
-          view.dispatch(view.state.tr.replaceWith(
-            from - match[0].length, to, node,
-          ).scrollIntoView());
-          return true;
+    return [
+      new Plugin({
+        props: {
+          handleTextInput(view, from, to, text) {
+            // Input rules run before the final '}' reaches the document.
+            // For inline atoms, nodeInputRule inserts a node without reliably
+            // deleting the source token. Consume the entire pending token here.
+            if (text !== "}" || !view.editable) return false;
+            const $from = view.state.doc.resolve(from);
+            if (!$from.parent.isTextblock) return false;
+            const before = $from.parent.textBetween(
+              0,
+              $from.parentOffset,
+              undefined,
+              "\uFFFC",
+            );
+            const match = /\{(title|subtitle|author|page|pages|footer)$/.exec(
+              before,
+            );
+            if (!match) return false;
+            const node = view.state.schema.nodes.mergeTag.create({
+              name: match[1],
+            });
+            view.dispatch(
+              view.state.tr
+                .replaceWith(from - match[0].length, to, node)
+                .scrollIntoView(),
+            );
+            return true;
+          },
         },
-      },
-    })];
+      }),
+    ];
   },
   addPasteRules() {
-    return [nodePasteRule({
-      find: /\{(?:title|subtitle|author|page|pages|footer)\}/g,
-      type: this.type,
-      getAttributes: (match) => ({ name: match[0].slice(1, -1) }),
-    })];
+    return [
+      nodePasteRule({
+        find: /\{(?:title|subtitle|author|page|pages|footer)\}/g,
+        type: this.type,
+        getAttributes: (match) => ({ name: match[0].slice(1, -1) }),
+      }),
+    ];
   },
 });
 const ColumnBreak = Node.create({
@@ -220,7 +259,16 @@ const Layout = Extension.create({
   addGlobalAttributes() {
     return [
       {
-        types: ["paragraph", "heading", "callout", "statBlock", "table", "image", "bulletList", "orderedList"],
+        types: [
+          "paragraph",
+          "heading",
+          "callout",
+          "statBlock",
+          "table",
+          "image",
+          "bulletList",
+          "orderedList",
+        ],
         attributes: {
           wide: {
             default: false,
@@ -230,12 +278,14 @@ const Layout = Extension.create({
           flowGroup: {
             default: null,
             parseHTML: (e) => e.dataset.flowGroup || null,
-            renderHTML: (a) => a.flowGroup ? { "data-flow-group": a.flowGroup } : {},
+            renderHTML: (a) =>
+              a.flowGroup ? { "data-flow-group": a.flowGroup } : {},
           },
           templateField: {
             default: null,
             parseHTML: (e) => e.dataset.templateField || null,
-            renderHTML: (a) => a.templateField ? { "data-template-field": a.templateField } : {},
+            renderHTML: (a) =>
+              a.templateField ? { "data-template-field": a.templateField } : {},
           },
           keep: {
             default: false,
@@ -273,8 +323,12 @@ const Layout = Extension.create({
         attributes: {
           width: {
             default: 100,
-            parseHTML: (e) => Math.min(100, Math.max(20, Number(e.dataset.width) || 100)),
-            renderHTML: (a) => ({ "data-width": a.width, style: `width:${a.width}%` }),
+            parseHTML: (e) =>
+              Math.min(100, Math.max(20, Number(e.dataset.width) || 100)),
+            renderHTML: (a) => ({
+              "data-width": a.width,
+              style: `width:${a.width}%`,
+            }),
           },
           flow: {
             default: "block",
@@ -297,6 +351,9 @@ export function extensions() {
       },
     }),
     Heading,
+    AuthoringAttributes,
+    CrossReference,
+    ReusableBlock,
     AdventureImage,
     MergeTag,
     Table.configure({ resizable: true, View: AdventureTableView }),
@@ -377,12 +434,17 @@ export function splitNode(n: JSONContent): [JSONContent, JSONContent] | null {
     const flowGroup = n.attrs?.flowGroup || crypto.randomUUID();
     return [
       { ...n, attrs: { ...n.attrs, flowGroup }, content: a },
-      { ...n, attrs: { ...n.attrs, flowGroup },
-        type: n.type === "heading" ? "paragraph" : n.type, content: b },
+      {
+        ...n,
+        attrs: { ...n.attrs, flowGroup },
+        type: n.type === "heading" ? "paragraph" : n.type,
+        content: b,
+      },
     ];
   }
   // Preserve semantic blocks and floated media as a unit across pages.
-  if (["statBlock", "callout", "image"].includes(n.type ?? "")) return null;
+  if (["statBlock", "callout", "image", "reusableBlock"].includes(n.type ?? ""))
+    return null;
   const children = n.content ?? [];
   if (children.length < 2) return null;
   const cut = Math.ceil(children.length / 2);
@@ -403,4 +465,3 @@ export function splitNode(n: JSONContent): [JSONContent, JSONContent] | null {
     },
   ];
 }
-
