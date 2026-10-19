@@ -7,6 +7,29 @@ import {
   paragraph,
   heading,
 } from "../../src/lib/documents";
+// Click the rendered text rather than a fixed point in a scaled block box.
+async function selectText(page: Page, selector: string, text: string) {
+  const block = page.locator(selector).filter({ hasText: text });
+  await block.scrollIntoViewIfNeeded();
+  const point = await block.evaluate((element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const rect = range.getClientRects()[0];
+    return {
+      x: rect.x + Math.min(15, rect.width / 2),
+      y: rect.y + rect.height / 2,
+    };
+  });
+  await page.mouse.click(point.x, point.y);
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const node = window.getSelection()?.anchorNode;
+        return node?.parentElement?.closest("p,h2")?.textContent;
+      }),
+    )
+    .toBe(text);
+}
 async function openFixture(page: Page) {
   const doc = createAdventure(true);
   doc.pages = [
@@ -46,10 +69,7 @@ test("text styles, list controls and borders persist through reload", async ({
   page,
 }) => {
   await openFixture(page);
-  await page
-    .locator(".tiptap p")
-    .filter({ hasText: "Opening words" })
-    .click({ position: { x: 20, y: 10 } });
+  await selectText(page, ".tiptap p", "Opening words");
   await page
     .getByLabel("Paragraph style", { exact: true })
     .selectOption("title");
@@ -62,10 +82,10 @@ test("text styles, list controls and borders persist through reload", async ({
   await expect(title).toHaveCSS("border-bottom-width", "3px");
   await expect(title).toHaveCSS("border-bottom-style", "dashed");
   await expect(title).toHaveCSS("padding-top", "8px");
-  await page
-    .locator(".tiptap p")
-    .filter({ hasText: "Second paragraph" })
-    .click({ position: { x: 20, y: 10 } });
+  await selectText(page, ".tiptap p", "Second paragraph");
+  await expect(page.getByLabel("Paragraph style", { exact: true })).toHaveValue(
+    "p",
+  );
   await page
     .getByLabel("Paragraph style", { exact: true })
     .selectOption("orderedList");
@@ -76,6 +96,8 @@ test("text styles, list controls and borders persist through reload", async ({
     "lower-roman",
   );
   await expect(page.locator(".tiptap ol")).toHaveAttribute("start", "4");
+  await expect(title).toHaveText("Opening words");
+  await expect(page.locator(".tiptap ol")).toContainText("Second paragraph");
   await expect(page.locator(".save-status")).toContainText("Saved");
   await page.screenshot({ path: "/tmp/adventure-borders-desktop.png" });
   await page.reload();
@@ -131,24 +153,21 @@ test("editable Word export retains title, code and list formatting", async ({
   page,
 }) => {
   await openFixture(page);
-  await page
-    .locator(".tiptap p")
-    .filter({ hasText: "Opening words" })
-    .click({ position: { x: 20, y: 10 } });
+  await selectText(page, ".tiptap p", "Opening words");
   await page
     .getByLabel("Paragraph style", { exact: true })
     .selectOption("title");
   await page.getByLabel("Border edges", { exact: true }).selectOption("bottom");
   await page.getByLabel("Border line style").selectOption("dashed");
-  await page
-    .locator(".tiptap p")
-    .filter({ hasText: "Second paragraph" })
-    .click({ position: { x: 20, y: 10 } });
+  await selectText(page, ".tiptap p", "Second paragraph");
+  await expect(page.getByLabel("Paragraph style", { exact: true })).toHaveValue(
+    "p",
+  );
   await page
     .getByLabel("Paragraph style", { exact: true })
     .selectOption("codeBlock");
   await expect(page.locator(".tiptap pre")).toContainText("Second paragraph");
-  await page.locator(".tiptap h2").click({ position: { x: 20, y: 10 } });
+  await selectText(page, ".tiptap h2", "Chapter heading");
   await expect(page.getByLabel("Paragraph style", { exact: true })).toHaveValue(
     "2",
   );
