@@ -46,7 +46,7 @@ npm run deploy
 - Direct-on-page Tiptap/ProseMirror editing, headings 1–9, inline typography, alignment, links, lists, highlights, sub/superscript, paragraph spacing/indentation and keep-with-next.
 - Two columns by default, with one/two/three columns per document or page, column breaks and full-width paragraphs/headings.
 - Letter, A4 and A5 paper with configurable margins, gutter, type size, line height, colors, running headers, footers and page numbering.
-- Six content-preserving visual templates with separate heading/body families. Twenty bundled open-source families plus system fonts and user-provided WOFF/WOFF2/TTF/OTF files.
+- Six content-preserving style presets, ten independent color themes, and ten font pairings with individual heading/body family controls. Twenty bundled open-source families plus system fonts and user-provided WOFF/WOFF2/TTF/OTF files.
 - Read-aloud boxes, asides, encounter/treasure callouts, editable creature stat blocks, and resizable tables with row/column insertion/removal, headers, cell merging and splitting.
 - Uploaded, pasted, dropped or URL-imported images. Percentage sizing, left/right text wrapping, alt text, optional captions and multiply blending. Per-page background art and opacity.
 - Title pages, live heading-based contents, and a keyword index. Add keywords directly or index a text selection. Generated references account for continued contents/index sheets. The index uses case-insensitive substring matching.
@@ -62,6 +62,8 @@ Use **Outline** beside the page thumbnails to collapse headings, jump to a secti
 **Content library** stores searchable, categorized entries on this device and embeds used entries in project backups. Save the selected content or current block, then insert an independent copy or a linked instance. Edit an entry in the library, or edit an instance on the page and choose **Save current content**. **Review changes** shows the new text and every current linked instance before replacement. Updating an entry replaces linked instances in the current adventure, including local edits, and retains a restore point. Other projects are never silently rewritten; the latest device-library entry can be reviewed and applied there. Linked blocks stay together on a page; insert an independent copy for content that needs to flow across pages.
 
 ## Saved styles and page masters
+
+**Style** offers independent color themes and font pairings with a live type preview. The **Default background color** control is always available in both **Page** and **Style**. Changing color themes, font pairings, or style presets preserves that background. Use **Use theme's suggested background** to explicitly adopt a palette's paper color. Choices are saved with the adventure, included in project backups, and carried into exports. Editable Word exports retain the document background, text/accent colors, and font choices. A page master's paper color overrides the document background on pages using that master.
 
 **Style → Manage styles and page masters** creates or edits named paragraph/block styles, page masters, and custom color/font themes. Designs are saved locally for reuse and included in project backups. Apply a named style in the contextual inspector. Changes to its definition update its uses in the document.
 
