@@ -1,3 +1,5 @@
+import { BlockFormatPanel } from "./BlockFormatPanel";
+import { BorderPanel } from "./BorderPanel";
 import { NamedStyleControl } from "./NamedStyleControl";
 import { useInspector } from "./context";
 import { MERGE_TAGS, mergeNode } from "../../lib/merge-tags";
@@ -50,6 +52,8 @@ export function SelectionPanel() {
           </label>
         )}
       </section>
+      <BlockFormatPanel />
+      <BorderPanel />
       <NamedStyleControl />
       {editor?.isActive("heading") && (
         <section className="panel-section">

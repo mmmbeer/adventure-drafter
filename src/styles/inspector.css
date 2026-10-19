@@ -162,3 +162,8 @@
 .inspector-tabs button.inspector-close:hover {
   background: #e9eee0;
 }
+
+.panel-section input[type="color"] {
+  height: 30px;
+  padding: 2px;
+}

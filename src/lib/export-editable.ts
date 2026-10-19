@@ -1,3 +1,11 @@
+import {
+  wordBox,
+  wordContainer,
+  wordTextStyles,
+  wordTextStyle,
+  wordLists,
+  type WordList,
+} from "./export-block-formatting";
 import { pageDesign } from "./designs";
 import { referenceValue } from "./cross-references";
 import {
@@ -14,7 +22,6 @@ import {
   PageNumber,
   AlignmentType,
   BorderStyle,
-  LevelFormat,
   VerticalPositionRelativeFrom,
   HorizontalPositionRelativeFrom,
   TextWrappingType,
@@ -40,6 +47,7 @@ export async function exportEditable(
   const accent = color(theme.accent);
   const ink = color(theme.ink);
   const sz = sizes[doc.settings.size];
+  const lists = wordLists();
   let currentPage = doc.settings.pageStart;
   async function pngImage(url: string, opacity = 1) {
     const response = await fetch(url);
@@ -104,7 +112,7 @@ export async function exportEditable(
   const border = { style: BorderStyle.SINGLE, size: 5, color: accent };
   async function convert(
     n: JSONContent,
-    list?: { kind: string; level: number },
+    list?: WordList,
   ): Promise<(Paragraph | Table)[]> {
     if (n.type === "image") {
       try {
@@ -155,15 +163,18 @@ export async function exportEditable(
             new TableCell({
               children: children.length ? children : [new Paragraph("")],
               columnSpan: cell.attrs?.colspan || 1,
+              ...wordBox(cell.attrs?.boxFormat),
               shading:
-                cell.type === "tableHeader"
+                wordBox(cell.attrs?.boxFormat).shading ||
+                (cell.type === "tableHeader"
                   ? { fill: color(theme.paper) }
-                  : undefined,
+                  : undefined),
               borders: {
                 top: border,
                 bottom: border,
                 left: border,
                 right: border,
+                ...wordBox(cell.attrs?.boxFormat).borders,
               },
             }),
           );
@@ -175,48 +186,56 @@ export async function exportEditable(
           }),
         );
       }
-      return [new Table({ rows, width: { size: 100, type: "pct" } })];
+      return [
+        new Table({
+          rows,
+          width: { size: 100, type: "pct" },
+          ...wordBox(n.attrs?.boxFormat),
+        }),
+      ];
     }
     if (n.type === "callout" || n.type === "statBlock") {
       const children = (
         await Promise.all((n.content ?? []).map((c) => convert(c)))
       ).flat();
       return [
-        new Table({
-          width: { size: 100, type: "pct" },
-          rows: [
-            new TableRow({
-              children: [
-                new TableCell({
-                  children,
-                  shading: { fill: color(theme.paper) },
-                  borders: {
-                    top: border,
-                    bottom: border,
-                    left: border,
-                    right: border,
-                  },
-                  margins: { top: 100, bottom: 100, left: 130, right: 130 },
-                }),
-              ],
-            }),
-          ],
+        wordContainer(children, n.attrs?.boxFormat, {
+          shading: { fill: color(theme.paper) },
+          borders: { top: border, bottom: border, left: border, right: border },
+          margins: { top: 100, bottom: 100, left: 130, right: 130 },
         }),
       ];
     }
-    if (n.type === "bulletList" || n.type === "orderedList")
-      return (
-        await Promise.all(
-          (n.content ?? []).map((c) =>
-            convert(c, { kind: n.type!, level: (list?.level ?? -1) + 1 }),
-          ),
-        )
+    if (n.type === "blockquote") {
+      const children = (
+        await Promise.all((n.content ?? []).map((c) => convert(c, list)))
       ).flat();
+      return [
+        wordContainer(children, n.attrs?.boxFormat, {
+          borders: { left: border },
+          margins: { left: 150 },
+        }),
+      ];
+    }
+    if (n.type === "bulletList" || n.type === "orderedList") {
+      const current = lists.add(n, list);
+      const children = (
+        await Promise.all((n.content ?? []).map((c) => convert(c, current)))
+      ).flat();
+      return n.attrs?.boxFormat && Object.keys(n.attrs.boxFormat).length
+        ? [wordContainer(children, n.attrs.boxFormat)]
+        : children;
+    }
     if (n.type === "listItem")
       return (
         await Promise.all(
           (n.content ?? []).map((c, i) =>
-            convert(c, i === 0 ? list : undefined),
+            convert(
+              c,
+              i === 0 || c.type === "bulletList" || c.type === "orderedList"
+                ? list
+                : undefined,
+            ),
           ),
         )
       ).flat();
@@ -229,12 +248,28 @@ export async function exportEditable(
       ];
     if (n.type === "horizontalRule")
       return [new Paragraph({ border: { bottom: border } })];
-    if (n.type === "paragraph" || n.type === "heading")
+    if (
+      n.type === "paragraph" ||
+      n.type === "heading" ||
+      n.type === "codeBlock"
+    )
       return [
         new Paragraph({
-          children: runs(n.content),
+          children:
+            n.type === "codeBlock"
+              ? (n.content ?? [])
+                  .map((c) => c.text || "")
+                  .join("")
+                  .split("\n")
+                  .flatMap((text, i) => [
+                    new TextRun({ text, break: i ? 1 : undefined }),
+                  ])
+              : runs(n.content),
+          border: wordBox(n.attrs?.boxFormat).borders,
+          shading: wordBox(n.attrs?.boxFormat).shading,
           style:
             n.attrs?.styleId ||
+            wordTextStyle(n) ||
             (n.type === "heading"
               ? `AdventureHeading${n.attrs?.level || 1}`
               : undefined),
@@ -262,16 +297,7 @@ export async function exportEditable(
           indent: n.attrs?.indent
             ? { left: Number(n.attrs.indent) * 15 }
             : undefined,
-          ...(list
-            ? list.kind === "bulletList"
-              ? { bullet: { level: Math.min(list.level, 8) } }
-              : {
-                  numbering: {
-                    reference: "adventure-list",
-                    level: Math.min(list.level, 8),
-                  },
-                }
-            : {}),
+          ...(list ? { numbering: list } : {}),
         }),
       ];
     return (
@@ -401,6 +427,7 @@ export async function exportEditable(
         },
       },
       paragraphStyles: [
+        ...wordTextStyles(doc),
         ...(doc.namedStyles ?? []).map((s) => ({
           id: s.id,
           name: s.name,
@@ -446,22 +473,7 @@ export async function exportEditable(
         })),
       ],
     },
-    numbering: {
-      config: [
-        {
-          reference: "adventure-list",
-          levels: Array.from({ length: 9 }, (_, i) => ({
-            level: i,
-            format: LevelFormat.DECIMAL,
-            text: `%${i + 1}.`,
-            alignment: AlignmentType.LEFT,
-            style: {
-              paragraph: { indent: { left: 360 * (i + 1), hanging: 180 } },
-            },
-          })),
-        },
-      ],
-    },
+    numbering: { config: lists.config },
     sections,
   });
   download(await Packer.toBlob(file), `${filename(doc)}-editable.docx`);

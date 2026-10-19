@@ -1,3 +1,5 @@
+import { lazy, Suspense } from "react";
+const SrdDialog = lazy(() => import("./dialogs/SrdDialog"));
 import { DesignsDialog } from "./dialogs/DesignsDialog";
 import { LibraryDialog } from "./dialogs/LibraryDialog";
 import { ReferenceDialog } from "./dialogs/ReferenceDialog";
@@ -21,6 +23,7 @@ export function WorkspaceDialogs() {
         (
           {
             reference: "Cross-reference",
+            srd: "SRD monsters and magic items",
             library: "Reusable content library",
             designs: "Styles and page masters",
             documents: "Your adventures",
@@ -39,13 +42,18 @@ export function WorkspaceDialogs() {
       }
       onClose={() => setDialog("")}
       size={
-        ["documents", "help", "library", "designs"].includes(dialog)
+        ["documents", "help", "library", "designs", "srd"].includes(dialog)
           ? "wide"
           : dialog === "delete" || dialog === "link"
             ? "small"
             : "normal"
       }
     >
+      {dialog === "srd" ? (
+        <Suspense fallback={<p role="status">Loading references…</p>}>
+          <SrdDialog />
+        </Suspense>
+      ) : null}
       {dialog === "designs" ? <DesignsDialog /> : null}
       {dialog === "library" ? <LibraryDialog /> : null}
       {dialog === "reference" ? <ReferenceDialog /> : null}
