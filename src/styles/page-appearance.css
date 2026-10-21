@@ -1,0 +1,158 @@
+.field-caption {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 11px;
+}
+.paper-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.paper-swatches button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 7px;
+  font-size: 10px;
+}
+.paper-swatches i {
+  width: 13px;
+  height: 13px;
+  border: 1px solid #9ca597;
+}
+.paper-swatches [aria-pressed="true"],
+.divider-options [aria-pressed="true"] {
+  border-color: #456750;
+  outline: 1px solid #456750;
+}
+.paper-custom-color {
+  display: flex !important;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+}
+.paper-custom-color input {
+  width: 34px !important;
+  height: 26px;
+  padding: 0;
+}
+.paper-custom-color span {
+  font-size: 10px;
+}
+.panel-section details {
+  margin-top: 12px;
+}
+.panel-section summary {
+  cursor: pointer;
+  font-size: 11px;
+  margin-bottom: 9px;
+}
+.running-header > span {
+  max-width: 48%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.page-footer b {
+  max-width: 35%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.running-header .running-edit-target,
+.page-footer .running-edit-target {
+  position: absolute;
+  inset: -6px;
+  z-index: 1;
+  width: calc(100% + 12px);
+  height: calc(100% + 12px);
+  border: 1px dashed transparent;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  cursor: text;
+}
+.running-header .running-edit-target:hover,
+.page-footer .running-edit-target:hover,
+.running-edit-target:focus-visible {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+.running-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.running-fields label:last-child {
+  grid-column: 1 / -1;
+}
+.placeholder-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 12px 0;
+}
+.placeholder-buttons button {
+  padding: 5px 8px;
+  font-size: 11px;
+}
+.running-text-preview {
+  padding: 15px;
+  border: 1px solid #cbd0c6;
+  font-size: 11px;
+}
+.running-text-preview > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.running-text-preview span {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.running-text-preview small {
+  display: block;
+  text-align: center;
+  margin: 22px 0;
+  color: #64715f;
+}
+.divider-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.divider-options button {
+  display: block;
+  padding: 9px 12px;
+  background: #fffdf5;
+  min-width: 0;
+  text-align: left;
+  font-size: 11px;
+}
+.divider-options button:first-child {
+  grid-column: 1 / -1;
+}
+.divider-preview,
+.tiptap hr[data-divider] {
+  display: block;
+  height: 36px;
+  width: 100%;
+  background-size: 100% auto;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: 0;
+  break-inside: avoid;
+}
+.tiptap hr[data-divider] {
+  margin: 10px 0;
+}
+.tiptap hr.ProseMirror-selectednode {
+  outline: 1px solid #8ba479;
+}
+@media (max-width: 600px) {
+  .running-fields,
+  .divider-options {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

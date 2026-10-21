@@ -55,14 +55,6 @@ export function DocumentPanel() {
           />
         </label>
         <label>
-          Footer
-          <input
-            value={doc.settings.footer}
-            placeholder="Author by default"
-            onChange={(e) => setting("footer", e.target.value)}
-          />
-        </label>
-        <label>
           First page number
           <input
             type="number"

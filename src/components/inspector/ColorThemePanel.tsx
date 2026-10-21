@@ -42,7 +42,8 @@ export function ColorThemePanel() {
         Use theme's suggested background
       </button>
       <p className="help">
-        Changing themes or fonts keeps your background color.
+        Each theme supplies its own default background. You can choose another
+        color; page overrides stay unchanged.
       </p>
       <div className="palette">
         {(["ink", "accent"] as const).map((key) => (

@@ -25,6 +25,8 @@ export function applyPageFlow(
     next?.kind === "body" &&
     !next.breakBefore &&
     !next.background &&
+    !next.paper &&
+    !next.runningText &&
     next.columns === source.columns &&
     next.masterId === source.masterId;
   if (moved.length && !reusable && pages.length >= 1000) return doc;
@@ -73,6 +75,8 @@ export function applyBackflow(
     source.continuedFrom !== id ||
     source.breakBefore ||
     source.background ||
+    source.paper ||
+    source.runningText ||
     source.masterId !== prev.masterId ||
     source.columns !== prev.columns ||
     JSON.stringify(prev.content.content ?? []) !==

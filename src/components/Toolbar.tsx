@@ -100,7 +100,7 @@ export function Toolbar({
       onDialog(type);
     else if (type === "image") onDialog("image");
     else if (type === "page") onInsertPage();
-    else if (type === "rule") c.setHorizontalRule().run();
+    else if (type === "rule") onDialog("divider");
     else if (type) c.insertContent(makeTemplate(type as TemplateKind)).run();
   };
   return (

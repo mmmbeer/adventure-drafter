@@ -1,3 +1,5 @@
+import { cleanRunningText } from "./running-text";
+import { validPaperColor } from "./page-colors";
 import { validateAuthoring } from "./authoring-validation";
 import { identifyDocument } from "./anchors";
 import type { Adventure } from "./types";
@@ -20,6 +22,7 @@ export function validateAdventure(value: unknown): Adventure {
     typeof d.settings.theme.bodyFont !== "string"
   )
     throw new Error("This is not a supported Adventure Drafter project.");
+  d.settings.runningText = cleanRunningText(d.settings.runningText);
   const ids = new Set<string>();
   for (const p of d.pages) {
     if (
@@ -29,6 +32,8 @@ export function validateAdventure(value: unknown): Adventure {
       !Array.isArray(p.content.content)
     )
       throw new Error("The project contains an invalid page.");
+    if (!validPaperColor(p.paper)) delete p.paper;
+    p.runningText = cleanRunningText(p.runningText);
     // Normalize historical merge-field input corruption on load/import.
     p.content = hydrateMergeTags(repairLegacyMergeTagArtifacts(p.content));
     if (!p.id || ids.has(p.id)) p.id = uid();

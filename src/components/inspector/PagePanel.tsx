@@ -1,3 +1,5 @@
+import { PaperColorPicker } from "../PaperColorPicker";
+import { pageDesign } from "../../lib/designs";
 import { BackgroundColor } from "./BackgroundColor";
 import { allMasters } from "../../lib/designs";
 import { ImagePlus } from "lucide-react";
@@ -5,6 +7,11 @@ import { useInspector } from "./context";
 
 export function PagePanel() {
   const { doc, page, patchPage, onDialog } = useInspector();
+  const design = pageDesign(
+    doc,
+    page,
+    doc.pages.findIndex((p) => p.id === page.id),
+  );
   return (
     <>
       <section className="panel-section">
@@ -71,10 +78,41 @@ export function PagePanel() {
       </section>
       <section className="panel-section">
         <h3>Page background</h3>
-        <BackgroundColor />
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={!page.paper}
+            onChange={(e) =>
+              patchPage("paper", e.target.checked ? undefined : design.paper)
+            }
+          />
+          Inherit default color
+        </label>
+        <PaperColorPicker
+          label="This page's background color"
+          value={design.paper}
+          onChange={(color) => patchPage("paper", color)}
+        />
         <p className="help">
-          Applies throughout the document. A page master's paper color can
-          override this default.
+          {page.paper
+            ? "This page has its own color."
+            : "Follows the page master or document default."}
+        </p>
+        <details>
+          <summary>Document default color</summary>
+          <BackgroundColor />
+        </details>
+      </section>
+      <section className="panel-section">
+        <h3>Header &amp; footer</h3>
+        <button
+          className="wide-button"
+          onClick={() => onDialog("running-text")}
+        >
+          Edit header &amp; footer
+        </button>
+        <p className="help">
+          Click the header or footer on the page to edit text and insert fields.
         </p>
       </section>
       <section className="panel-section">

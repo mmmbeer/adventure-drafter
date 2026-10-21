@@ -1,12 +1,21 @@
 import type { JSONContent } from "@tiptap/core";
 import type { LibraryEntry, NamedStyle, PageMaster } from "./authoring-types";
 export type PageKind = "body" | "title" | "toc" | "index";
+export interface RunningText {
+  headerLeft: string;
+  headerRight: string;
+  footerLeft: string;
+  footerCenter: string;
+  footerRight: string;
+}
 export interface Page {
   id: string;
   kind: PageKind;
   content: JSONContent;
   columns?: number;
   masterId?: string;
+  paper?: string;
+  runningText?: Partial<RunningText>;
   background?: string;
   backgroundOpacity?: number;
   hideNumber?: boolean;
@@ -43,6 +52,7 @@ export interface Adventure {
     gutter: number;
     pageStart: number;
     footer: string;
+    runningText?: Partial<RunningText>;
     tocDepth: number;
     autoIndexHeadings?: boolean;
     indexDepth?: number;

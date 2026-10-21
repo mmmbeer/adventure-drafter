@@ -7,6 +7,8 @@ import {
   type WordList,
 } from "./export-block-formatting";
 import { pageDesign } from "./designs";
+import { pngImage, wordDivider } from "./export-images";
+import { wordRunningText } from "./export-running-text";
 import { referenceValue } from "./cross-references";
 import {
   Document,
@@ -17,9 +19,6 @@ import {
   TableCell,
   ImageRun,
   Packer,
-  Header,
-  Footer,
-  PageNumber,
   AlignmentType,
   BorderStyle,
   VerticalPositionRelativeFrom,
@@ -49,34 +48,8 @@ export async function exportEditable(
   const sz = sizes[doc.settings.size];
   const lists = wordLists();
   let currentPage = doc.settings.pageStart;
-  async function pngImage(url: string, opacity = 1) {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error("Image unavailable");
-    const objectUrl = URL.createObjectURL(await response.blob());
-    try {
-      const image = new Image();
-      image.src = objectUrl;
-      await image.decode();
-      const canvas = document.createElement("canvas");
-      canvas.width = image.naturalWidth;
-      canvas.height = image.naturalHeight;
-      const context = canvas.getContext("2d");
-      if (!context) throw new Error("Image conversion unavailable");
-      context.globalAlpha = opacity;
-      context.drawImage(image, 0, 0);
-      return {
-        data: Uint8Array.from(
-          atob(canvas.toDataURL("image/png").split(",")[1]),
-          (c) => c.charCodeAt(0),
-        ),
-        width: image.naturalWidth,
-        height: image.naturalHeight,
-      };
-    } finally {
-      URL.revokeObjectURL(objectUrl);
-    }
-  }
-
+  let contentWidth = sz.width - doc.settings.margin * 2;
+  let pageColumns = doc.settings.columns;
   function runs(nodes: JSONContent[] = []): (TextRun | ExternalHyperlink)[] {
     return nodes.flatMap((n) => {
       if (n.type === "hardBreak") return [new TextRun({ break: 1 })];
@@ -246,8 +219,13 @@ export async function exportEditable(
           pageBreakBefore: false,
         }),
       ];
-    if (n.type === "horizontalRule")
-      return [new Paragraph({ border: { bottom: border } })];
+    if (n.type === "horizontalRule") {
+      const width = n.attrs?.wide
+        ? contentWidth
+        : (contentWidth - doc.settings.gutter * (pageColumns - 1)) /
+          pageColumns;
+      return [await wordDivider(n, theme, width, border)];
+    }
     if (
       n.type === "paragraph" ||
       n.type === "heading" ||
@@ -310,6 +288,10 @@ export async function exportEditable(
     const p = doc.pages[i];
     const design = pageDesign(doc, p, i);
     currentPage = pageNumber(doc, i);
+    contentWidth = sz.width - design.left - design.right;
+    pageColumns = ["title", "toc", "index"].includes(p.kind)
+      ? 1
+      : design.columns;
     let children: (Paragraph | Table)[] = [];
     if (p.kind === "toc") {
       children = [
@@ -335,11 +317,13 @@ export async function exportEditable(
       children = (
         await Promise.all((p.content.content ?? []).map((c) => convert(c)))
       ).flat();
-    if (design.background) {
-      const background = await pngImage(
-        design.background!,
-        design.backgroundOpacity,
-      );
+    if (design.background || design.paper !== theme.paper) {
+      const background = await pngImage(design.background, {
+        opacity: design.backgroundOpacity,
+        paper: design.paper,
+        width: sz.width,
+        height: sz.height,
+      });
       children.unshift(
         new Paragraph({
           children: [
@@ -385,31 +369,7 @@ export async function exportEditable(
           pageNumbers: i === 0 ? { start: doc.settings.pageStart } : undefined,
         },
       },
-      headers: {
-        default: new Header({
-          children: [
-            new Paragraph({
-              text: design.hideHeader ? "" : design.header,
-              style: "RunningText",
-            }),
-          ],
-        }),
-      },
-      footers: {
-        default: new Footer({
-          children: [
-            new Paragraph({
-              alignment: AlignmentType.CENTER,
-              children: [
-                new TextRun(`${design.footer}   `),
-                ...(!design.hideNumber && p.kind !== "title"
-                  ? [new TextRun({ children: [PageNumber.CURRENT] })]
-                  : []),
-              ],
-            }),
-          ],
-        }),
-      },
+      ...wordRunningText(doc, design, p.kind === "title", contentWidth),
       children,
     });
   }

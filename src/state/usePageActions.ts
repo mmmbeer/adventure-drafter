@@ -182,7 +182,9 @@ export function usePageActions(state: WorkspaceState) {
           (!p.breakBefore &&
             p.columns === buffer[0].columns &&
             p.masterId === buffer[0].masterId)) &&
-        !p.background
+        !p.background &&
+        !p.paper &&
+        !p.runningText
       )
         buffer.push(p);
       else {

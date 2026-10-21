@@ -1,3 +1,4 @@
+import { runningTemplates } from "./running-text";
 import type { Adventure, Page } from "./types";
 import type { NamedStyle, PageMaster } from "./authoring-types";
 import { plainText } from "./anchors";
@@ -96,8 +97,11 @@ export function pageDesign(
     }
   const resolve = (value: string) =>
     interpolateMergeTags(value.replaceAll("{chapter}", chapter), doc, number);
+  const text = runningTemplates(doc, page, number, master);
   return {
     master,
+    templates: text,
+    chapter,
     number,
     margin,
     left,
@@ -110,11 +114,12 @@ export function pageDesign(
     backgroundOpacity: page.background
       ? (page.backgroundOpacity ?? 0.22)
       : (master?.backgroundOpacity ?? 0.22),
-    paper: master?.paper || doc.settings.theme.paper,
-    header: resolve(
-      master ? (odd ? master.headerOdd : master.headerEven) : doc.title,
-    ),
-    footer: resolve(master ? master.footer : doc.settings.footer || doc.author),
+    paper: page.paper || master?.paper || doc.settings.theme.paper,
+    header: resolve(text.headerLeft),
+    headerRight: resolve(text.headerRight),
+    footer: resolve(text.footerLeft),
+    footerCenter: resolve(text.footerCenter),
+    footerRight: resolve(text.footerRight),
     hideHeader: page.kind === "title" || !!master?.hideHeader,
     hideNumber: page.hideNumber ?? master?.hideNumber ?? false,
   };
