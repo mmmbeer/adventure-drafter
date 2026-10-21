@@ -1,17 +1,74 @@
 /* Editor fields resemble text while remaining identifiable as dynamic values. */
 .tiptap .merge-tag {
+  position: relative;
   display: inline;
   white-space: normal;
   padding: 0 1px;
   border-bottom: 1px dotted color-mix(in srgb, var(--accent) 60%, transparent);
   color: inherit;
   background: color-mix(in srgb, var(--accent) 4%, transparent);
-  cursor: default;
+  cursor: pointer;
+}
+.tiptap .merge-tag-value {
+  display: inline;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+.tiptap .merge-tag-remove {
+  position: absolute;
+  right: -7px;
+  top: -10px;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  color: var(--accent);
+  background: var(--paper);
+  font:
+    13px/14px Inter,
+    sans-serif;
+  letter-spacing: 0;
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+}
+.tiptap .merge-tag-remove::before {
+  content: "×";
+}
+.tiptap .merge-tag:hover .merge-tag-remove,
+.tiptap .merge-tag:focus-within .merge-tag-remove {
+  opacity: 1;
+  pointer-events: auto;
+}
+.tiptap .merge-tag button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+@media (hover: none) {
+  .tiptap .merge-tag-remove {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
 .tiptap .merge-tag:hover {
   background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 @media print {
-  .tiptap .merge-tag { background: transparent; border-bottom: 0; }
+  .tiptap .merge-tag {
+    background: transparent;
+    border-bottom: 0;
+  }
 }
-.export-stage .tiptap .merge-tag { background: transparent; border-bottom: 0; }
+.export-stage .tiptap .merge-tag {
+  background: transparent;
+  border-bottom: 0;
+}

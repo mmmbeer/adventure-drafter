@@ -3,6 +3,7 @@ import type { Editor } from "@tiptap/react";
 import { nodeText, sizes, type Adventure } from "../lib/model";
 import { saveDocument, listDocuments, listVersions } from "../lib/storage";
 import { useLocalDraft } from "./useLocalDraft";
+import type { MergeTagName } from "../lib/merge-tags";
 import { useNotifications } from "./useNotifications";
 export function useWorkspaceState() {
   const { notice, setNotice, report } = useNotifications();
@@ -13,6 +14,9 @@ export function useWorkspaceState() {
   );
   const [editor, setEditor] = useState<Editor | null>(null);
   const [tab, setTab] = useState("inspect");
+  const [placeholderSource, setPlaceholderSource] = useState<{
+    name: MergeTagName;
+  } | null>(null);
   const [dialog, setDialog] = useState("");
   const [warnings, setWarnings] = useState<string[]>([]);
   const [zoom, setZoom] = useState(82);
@@ -158,6 +162,8 @@ export function useWorkspaceState() {
     setEditor,
     tab,
     setTab,
+    placeholderSource,
+    setPlaceholderSource,
     dialog,
     setDialog,
     status,

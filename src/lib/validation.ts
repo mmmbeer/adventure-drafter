@@ -1,5 +1,6 @@
 import { cleanRunningText } from "./running-text";
 import { validPaperColor } from "./page-colors";
+import { isBlankTitle, titlePageContent } from "./title-page";
 import { validateAuthoring } from "./authoring-validation";
 import { identifyDocument } from "./anchors";
 import type { Adventure } from "./types";
@@ -34,6 +35,8 @@ export function validateAdventure(value: unknown): Adventure {
       throw new Error("The project contains an invalid page.");
     if (!validPaperColor(p.paper)) delete p.paper;
     p.runningText = cleanRunningText(p.runningText);
+    if (p.kind === "title" && isBlankTitle(p.content.content))
+      p.content = { type: "doc", content: titlePageContent() };
     // Normalize historical merge-field input corruption on load/import.
     p.content = hydrateMergeTags(repairLegacyMergeTagArtifacts(p.content));
     if (!p.id || ids.has(p.id)) p.id = uid();

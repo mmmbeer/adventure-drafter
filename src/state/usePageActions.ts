@@ -1,12 +1,7 @@
 import { useCallback } from "react";
 import type { Editor } from "@tiptap/react";
 import type { JSONContent } from "@tiptap/core";
-import {
-  page as makePage,
-  heading,
-  paragraph,
-  type PageKind,
-} from "../lib/model";
+import { page as makePage, paragraph, type PageKind } from "../lib/model";
 import type { WorkspaceState } from "./useWorkspaceState";
 import { applyPageFlow, applyBackflow } from "../lib/page-flow";
 import { appendFlow, type BackflowPlan } from "../lib/backflow";
@@ -92,15 +87,7 @@ export function usePageActions(state: WorkspaceState) {
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
   const addPage = (kind: PageKind) => {
-    let content: JSONContent[] = [paragraph()];
-    if (kind === "title")
-      content = [
-        paragraph("A TABLETOP ADVENTURE"),
-        heading(doc.title),
-        paragraph(doc.subtitle),
-        paragraph(`Written by ${doc.author}`),
-      ];
-    const p = makePage(kind, content);
+    const p = makePage(kind);
     update((d) => {
       const pages = [...d.pages];
       pages.splice(

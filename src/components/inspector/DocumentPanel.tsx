@@ -1,3 +1,4 @@
+import { DocumentDetails } from "./DocumentDetails";
 import { allMasters } from "../../lib/designs";
 import { BookOpen, Download } from "lucide-react";
 import { useInspector } from "./context";
@@ -27,48 +28,7 @@ export function DocumentPanel() {
   const index = keywordIndex(doc);
   return (
     <>
-      <section className="panel-section">
-        <h3>Adventure details</h3>
-        <label>
-          Title
-          <input
-            aria-label="Document title"
-            value={doc.title}
-            onChange={(e) => update((d) => ({ ...d, title: e.target.value }))}
-          />
-        </label>
-        <label>
-          Author
-          <input
-            aria-label="Document author"
-            value={doc.author}
-            onChange={(e) => update((d) => ({ ...d, author: e.target.value }))}
-          />
-        </label>
-        <label>
-          Subtitle
-          <input
-            value={doc.subtitle}
-            onChange={(e) =>
-              update((d) => ({ ...d, subtitle: e.target.value }))
-            }
-          />
-        </label>
-        <label>
-          First page number
-          <input
-            type="number"
-            min="1"
-            value={doc.settings.pageStart}
-            onChange={(e) => setting("pageStart", Math.max(1, +e.target.value))}
-          />
-        </label>
-        <p className="help">
-          Use {"{title}"}, {"{author}"}, {"{page}"}, {"{pages}"}, {"{subtitle}"}{" "}
-          or {"{footer}"} in page text. Values stay current as this document
-          changes.
-        </p>
-      </section>
+      <DocumentDetails />
       <section className="panel-section">
         <h3>Document layout</h3>
         <label>
