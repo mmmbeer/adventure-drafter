@@ -450,13 +450,14 @@ export function splitNode(n: JSONContent): [JSONContent, JSONContent] | null {
       },
     ];
   }
+  // Tables require measured, rowspan-safe row boundaries, never halving.
+  if (n.type === "table") return null;
   // Preserve semantic blocks and floated media as a unit across pages.
   if (["statBlock", "callout", "image", "reusableBlock"].includes(n.type ?? ""))
     return null;
   const children = n.content ?? [];
   if (children.length < 2) return null;
   const cut = Math.ceil(children.length / 2);
-  if (n.type === "table" && children.length <= 2) return null;
   return [
     { ...n, content: children.slice(0, cut) },
     {
@@ -465,11 +466,7 @@ export function splitNode(n: JSONContent): [JSONContent, JSONContent] | null {
         n.type === "orderedList"
           ? { ...n.attrs, start: Number(n.attrs?.start ?? 1) + cut }
           : n.attrs,
-      content:
-        n.type === "table" &&
-        children[0].content?.some((c) => c.type === "tableHeader")
-          ? [children[0], ...children.slice(cut)]
-          : children.slice(cut),
+      content: children.slice(cut),
     },
   ];
 }

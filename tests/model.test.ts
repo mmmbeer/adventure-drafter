@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { splitTable } from "../src/lib/table-flow";
 import { describe, it, expect } from "vitest";
 import {
   createAdventure,
@@ -152,7 +153,7 @@ describe("rich content round trips", () => {
         content: [{ type: "tableCell", content: [paragraph(String(i))] }],
       })),
     };
-    const parts = splitNode(table)!;
+    const parts = splitTable(table, 2)!;
     expect(parts.flatMap((p) => p.content ?? [])).toHaveLength(4);
   });
 });

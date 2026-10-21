@@ -2,6 +2,9 @@ import { pageDesign } from "../lib/designs";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { extensions, cleanHtml, splitNode } from "../lib/editor";
+import { tableCursor } from "../lib/table-cursor";
+import { layoutFits } from "../lib/layout-measurement";
+import { planTableLayout } from "../lib/table-pagination";
 import { dataUrl } from "../lib/fonts";
 import { planBackflow, type BackflowPlan } from "../lib/backflow";
 import {
@@ -22,7 +25,13 @@ interface Props {
   readOnly: boolean;
   onFocus: (editor: Editor | null, id: string) => void;
   onChange: (id: string, content: JSONContent) => void;
-  onOverflow: (id: string, nodes: JSONContent[], cursor?: number) => void;
+  onOverflow: (
+    id: string,
+    before: JSONContent[],
+    remaining: JSONContent[],
+    nodes: JSONContent[],
+    cursor?: number,
+  ) => void;
   onReclaim: (id: string, plan: BackflowPlan) => void;
   register: (id: string, editor: Editor | null) => void;
   report: (message: string) => void;
@@ -47,6 +56,7 @@ export function PageEditor({
   const [overflow, setOverflow] = useState(false);
   const [oversized, setOversized] = useState(false);
   const paginationPending = useRef(false);
+  const paginationSelection = useRef<number | undefined>(undefined);
   const nextPage = doc.pages[index + 1];
   const latest = useRef({
     onChange,
@@ -139,6 +149,12 @@ export function PageEditor({
       JSON.stringify(editor.getJSON()) !== JSON.stringify(page.content)
     )
       editor.commands.setContent(page.content, { emitUpdate: false });
+    if (editor && paginationSelection.current !== undefined) {
+      editor.commands.setTextSelection(
+        Math.min(paginationSelection.current, editor.state.doc.content.size),
+      );
+      paginationSelection.current = undefined;
+    }
     // The editor and persisted page have caught up with the previous split.
     paginationPending.current = false;
   }, [editor, page.content]);
@@ -151,11 +167,40 @@ export function PageEditor({
         if (!editor || editor.isDestroyed || paginationPending.current) return;
         const el = editor.view.dom;
         if (el.dataset.documentSelected === "true") return;
-        const spills =
-          el.scrollWidth > el.clientWidth + 4 ||
-          el.scrollHeight > el.clientHeight + 4;
+        const spills = !layoutFits(el);
         setOverflow(spills);
         setOversized(false);
+        const nodes: JSONContent[] = editor.getJSON().content ?? [];
+        const canFlow =
+          !latest.current.readOnly &&
+          page.kind === "body" &&
+          !editor.view.composing;
+        const tablePlan = canFlow
+          ? planTableLayout(el, nodes, editor.schema)
+          : null;
+        if (tablePlan) {
+          // Apply both sides together. Never leave a render with copied rows
+          // in the source and destination for another page timer to consume.
+          const cursor = editor.isFocused
+            ? tableCursor(
+                nodes,
+                tablePlan,
+                editor.state.selection.from,
+                editor.schema,
+              )
+            : undefined;
+          paginationSelection.current =
+            cursor?.page === 0 ? cursor.position : undefined;
+          paginationPending.current = true;
+          latest.current.onOverflow(
+            page.id,
+            latest.current.page.content.content ?? [],
+            tablePlan.content,
+            tablePlan.overflow,
+            cursor?.page === 1 ? cursor.position : undefined,
+          );
+          return;
+        }
         if (
           !spills &&
           !latest.current.readOnly &&
@@ -168,7 +213,8 @@ export function PageEditor({
             next.continuedFrom === page.id &&
             !next.breakBefore &&
             !next.background &&
-            next.masterId === page.masterId
+            next.masterId === page.masterId &&
+            next.columns === page.columns
           ) {
             const nextDom = document.querySelector<HTMLElement>(
               `.paper[data-page-id="${next.id}"] .page-writing .tiptap`,
@@ -182,7 +228,11 @@ export function PageEditor({
                 next.id,
                 editor.schema,
               );
-              if (plan) latest.current.onReclaim(page.id, plan);
+              if (plan)
+                latest.current.onReclaim(page.id, {
+                  ...plan,
+                  before: latest.current.page.content.content ?? [],
+                });
             }
           }
         }
@@ -193,8 +243,6 @@ export function PageEditor({
           editor.view.composing
         )
           return;
-        const nodes: JSONContent[] =
-          (editor.getJSON() as JSONContent).content ?? [];
         if (!nodes.length) return;
         const bounds = el.getBoundingClientRect();
         const children = [...el.children];
@@ -252,8 +300,13 @@ export function PageEditor({
         editor.commands.setTextSelection(
           Math.min(selection, editor.state.doc.content.size),
         );
-        latest.current.onChange(page.id, editor.getJSON());
-        latest.current.onOverflow(page.id, moved, cursor);
+        latest.current.onOverflow(
+          page.id,
+          latest.current.page.content.content ?? [],
+          remaining,
+          moved,
+          cursor,
+        );
       }, 700);
     };
     editor.on("update", check);
@@ -276,6 +329,8 @@ export function PageEditor({
     doc.pageMasters,
     doc.namedStyles,
     page.masterId,
+    page.columns,
+    nextPage?.columns,
     nextPage?.masterId,
     nextPage?.content,
     nextPage?.id,
