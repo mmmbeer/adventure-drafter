@@ -45,7 +45,7 @@ function rgb(hex: string) {
   return `rgb(${[1, 3, 5].map((start) => parseInt(hex.slice(start, start + 2), 16)).join(", ")})`;
 }
 
-test("all color themes preserve the background and font choices", async ({
+test("themes supply default paper colors while preserving font choices", async ({
   page,
 }) => {
   await openFixture(page);
@@ -59,7 +59,7 @@ test("all color themes preserve the background and font choices", async ({
       .selectOption(palette.id);
     await expect(page.locator(".paper")).toHaveCSS(
       "background-color",
-      rgb("#ddeeff"),
+      rgb(palette.paper),
     );
     await expect(page.locator(".paper")).toHaveCSS("color", rgb(palette.ink));
     await expect(page.locator(".paper h1")).toHaveCSS(
@@ -70,6 +70,7 @@ test("all color themes preserve the background and font choices", async ({
       "Lora",
     );
   }
+  await background(page, "#ddeeff");
   await page
     .getByRole("button", {
       name: "Use theme's suggested background",
@@ -82,8 +83,9 @@ test("all color themes preserve the background and font choices", async ({
   await page.getByRole("button", { name: /Gothic folio/ }).click();
   await expect(
     page.getByLabel("Default background color", { exact: true }),
-  ).toHaveValue("#eef7f2");
+  ).toHaveValue("#eee9e4");
   await page.getByRole("button", { name: "Page", exact: true }).click();
+  await page.getByText("Document default color", { exact: true }).click();
   await background(page, "#fffdf0");
   await page.getByRole("button", { name: "Style", exact: true }).click();
   await expect(
@@ -137,8 +139,8 @@ test("appearance survives reload and project backup import", async ({
   page,
 }) => {
   await openFixture(page);
-  await background(page, "#eeddcc");
   await page.getByLabel("Color theme", { exact: true }).selectOption("desert");
+  await background(page, "#eeddcc");
   await page.getByLabel("Font pairing", { exact: true }).selectOption("scribe");
   await expect(
     page.getByText("Saved on this device", { exact: true }),
@@ -181,8 +183,8 @@ test("editable Word retains background, text colors and selected fonts", async (
   page,
 }) => {
   await openFixture(page);
-  await background(page, "#eeddcc");
   await page.getByLabel("Color theme", { exact: true }).selectOption("ocean");
+  await background(page, "#eeddcc");
   await page
     .getByLabel("Font pairing", { exact: true })
     .selectOption("literary");
@@ -220,4 +222,90 @@ test("background and font controls fit on a narrow viewport", async ({
   await page.screenshot({
     path: test.info().outputPath("appearance-mobile.png"),
   });
+});
+
+test("page swatches override the theme and can return to inheritance", async ({
+  page,
+}) => {
+  await openFixture(page);
+  await page.getByRole("button", { name: "Page", exact: true }).click();
+  const colors = page.getByRole("group", {
+    name: "This page's background color suggestions",
+  });
+  await colors.getByRole("button", { name: "Beige", exact: true }).click();
+  await expect(page.getByLabel("Inherit default color")).not.toBeChecked();
+  await page.getByRole("button", { name: "Style", exact: true }).click();
+  await page.getByLabel("Color theme", { exact: true }).selectOption("ocean");
+  await expect(page.locator(".paper")).toHaveCSS(
+    "background-color",
+    rgb("#f3ead8"),
+  );
+  await page.getByRole("button", { name: "Page", exact: true }).click();
+  await page.getByLabel("Inherit default color").check();
+  await expect(page.locator(".paper")).toHaveCSS(
+    "background-color",
+    rgb("#f0f6fa"),
+  );
+});
+
+test("headers and footers edit from the canvas with live placeholders and page overrides", async ({
+  page,
+}) => {
+  await openFixture(page);
+  await page
+    .getByRole("button", { name: "Edit header text", exact: true })
+    .click();
+  const dialog = page.getByRole("dialog", { name: "Header & footer" });
+  await dialog
+    .getByLabel("Header · left", { exact: true })
+    .fill("Adventure: {title}");
+  await dialog
+    .getByLabel("Footer · center", { exact: true })
+    .fill("Page {page} of {pages}");
+  await dialog.getByRole("button", { name: "Apply changes" }).click();
+  await expect(page.locator(".page-footer b")).toHaveText("Page 1 of 1");
+  await expect(page.locator(".running-header")).toContainText("Adventure:");
+  await page
+    .getByRole("button", { name: "Header & footer", exact: true })
+    .click();
+  await dialog.getByLabel("Header and footer scope").selectOption("page");
+  await dialog
+    .getByLabel("Header · left", { exact: true })
+    .fill("Only this page");
+  await dialog.getByRole("button", { name: "Apply changes" }).click();
+  await expect(page.locator(".running-header")).toContainText("Only this page");
+  await page
+    .getByRole("button", { name: "Edit footer text", exact: true })
+    .click();
+  await expect(dialog.getByLabel("Header and footer scope")).toHaveValue(
+    "page",
+  );
+  await dialog.getByLabel("Inherit header and footer").check();
+  await dialog.getByRole("button", { name: "Apply changes" }).click();
+  await expect(page.locator(".running-header")).toContainText("Adventure:");
+  await page.reload();
+  await expect(page.locator(".page-footer b")).toHaveText("Page 1 of 1");
+});
+
+test("theme rules follow color themes and survive reload", async ({ page }) => {
+  await openFixture(page);
+  await page.locator(".tiptap p").last().click();
+  await page.getByLabel("Insert block", { exact: true }).selectOption("rule");
+  const dialog = page.getByRole("dialog", { name: "Horizontal rules" });
+  await expect(
+    dialog.getByRole("button", { name: "Theme divider", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await dialog.getByLabel("Span all columns").check();
+  await dialog.getByRole("button", { name: "Insert horizontal rule" }).click();
+  const rule = page.locator('.tiptap hr[data-divider="theme"]');
+  await expect(rule).toHaveCount(1);
+  await expect(rule).toHaveAttribute("data-wide", "true");
+  await page.getByLabel("Color theme", { exact: true }).selectOption("forest");
+  await expect(rule).toHaveCSS("background-image", /forest\.png/);
+  await expect(
+    page.getByText("Saved on this device", { exact: true }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(rule).toHaveCount(1);
+  await expect(rule).toHaveCSS("background-image", /forest\.png/);
 });

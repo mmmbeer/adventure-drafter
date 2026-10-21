@@ -1,3 +1,4 @@
+import { DividerDecoration } from "./dividers";
 import { SrdBlockMetadata, splitSrdBlock } from "./srd-block";
 import { BlockFormatting } from "./block-formatting";
 import { BoxFormatting } from "./box-formatting";
@@ -271,6 +272,7 @@ const Layout = Extension.create({
           "image",
           "bulletList",
           "orderedList",
+          "horizontalRule",
         ],
         attributes: {
           wide: {
@@ -353,6 +355,7 @@ export function extensions() {
         HTMLAttributes: { rel: "noopener noreferrer" },
       },
     }),
+    DividerDecoration,
     SrdBlockMetadata,
     Heading,
     BlockFormatting,
@@ -400,6 +403,7 @@ export function cleanHtml(html: string) {
       "data-template-field",
       "data-flow-group",
       "data-merge-tag",
+      "data-divider",
     ],
     FORBID_TAGS: [
       "style",

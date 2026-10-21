@@ -1,6 +1,7 @@
 import type { JSONContent } from "@tiptap/core";
 import type { Adventure, Page, PageKind } from "./types";
 import { themes } from "./templates";
+import { titlePageContent } from "./title-page";
 export const uid = () => crypto.randomUUID();
 export const text = (value: string): JSONContent => ({
   type: "text",
@@ -17,7 +18,9 @@ export const heading = (value: string, level = 1): JSONContent => ({
 });
 export const page = (
   kind: PageKind = "body",
-  content: JSONContent[] = [paragraph()],
+  content: JSONContent[] = kind === "title"
+    ? titlePageContent()
+    : [paragraph()],
 ): Page => ({
   id: uid(),
   kind,
@@ -50,7 +53,7 @@ export function createAdventure(blank = false): Adventure {
     indexTerms: ["Blackwater", "Mara Voss", "Bellkeeper"],
     fonts: [],
     pages: blank
-      ? [page()]
+      ? [page("title"), page()]
       : [
           page("title", [
             paragraph("AN ADVENTURE IN THE BORDERLANDS"),

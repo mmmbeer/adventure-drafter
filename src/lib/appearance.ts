@@ -145,7 +145,12 @@ export const fontPairings = [
 ];
 
 export function applyColorTheme(theme: Theme, palette: ColorTheme): Theme {
-  return { ...theme, ink: palette.ink, accent: palette.accent };
+  return {
+    ...theme,
+    paper: palette.paper,
+    ink: palette.ink,
+    accent: palette.accent,
+  };
 }
 
 export function applyFontPairing(
@@ -159,6 +164,6 @@ export function applyFontPairing(
   };
 }
 
-export function applyStylePreset(theme: Theme, preset: Theme): Theme {
-  return { ...preset, paper: theme.paper };
+export function applyStylePreset(_theme: Theme, preset: Theme): Theme {
+  return { ...preset };
 }

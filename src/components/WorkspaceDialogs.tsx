@@ -1,3 +1,5 @@
+import { DividerDialog } from "./dialogs/DividerDialog";
+import { RunningTextDialog } from "./dialogs/RunningTextDialog";
 import { lazy, Suspense } from "react";
 const SrdDialog = lazy(() => import("./dialogs/SrdDialog"));
 import { DesignsDialog } from "./dialogs/DesignsDialog";
@@ -22,6 +24,8 @@ export function WorkspaceDialogs() {
       title={
         (
           {
+            divider: "Horizontal rules",
+            "running-text": "Header & footer",
             reference: "Cross-reference",
             srd: "SRD monsters and magic items",
             library: "Reusable content library",
@@ -54,6 +58,8 @@ export function WorkspaceDialogs() {
           <SrdDialog />
         </Suspense>
       ) : null}
+      {dialog === "divider" ? <DividerDialog /> : null}
+      {dialog === "running-text" ? <RunningTextDialog /> : null}
       {dialog === "designs" ? <DesignsDialog /> : null}
       {dialog === "library" ? <LibraryDialog /> : null}
       {dialog === "reference" ? <ReferenceDialog /> : null}

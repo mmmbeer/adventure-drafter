@@ -1,3 +1,5 @@
+import { dividerSource } from "../lib/dividers";
+import { PageRunningText } from "./PageRunningText";
 import { pageDesign } from "../lib/designs";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
@@ -11,7 +13,6 @@ import {
   sizes,
   entries,
   keywordIndex,
-  pageNumber,
   generatedCapacity,
   type Adventure,
   type Page,
@@ -213,6 +214,8 @@ export function PageEditor({
             next.continuedFrom === page.id &&
             !next.breakBefore &&
             !next.background &&
+            !next.paper &&
+            !next.runningText &&
             next.masterId === page.masterId &&
             next.columns === page.columns
           ) {
@@ -332,6 +335,8 @@ export function PageEditor({
     page.columns,
     nextPage?.columns,
     nextPage?.masterId,
+    nextPage?.paper,
+    nextPage?.runningText,
     nextPage?.content,
     nextPage?.id,
     nextPage?.continuedFrom,
@@ -340,6 +345,7 @@ export function PageEditor({
   const size = sizes[doc.settings.size];
   const design = pageDesign(doc, page, index);
   const style = {
+    "--theme-divider": `url("${dividerSource("theme", doc.settings.theme)}")`,
     "--page-width": `${size.width}px`,
     "--page-height": `${size.height}px`,
     "--margin": `${design.margin}px`,
@@ -392,19 +398,13 @@ export function PageEditor({
             }}
           />
         )}
-        <div
-          className="running-header"
-          style={design.hideHeader ? { display: "none" } : undefined}
-        >
-          <span>{design.header}</span>
-          <span>
-            {page.kind === "body"
-              ? "ADVENTURE"
-              : page.kind === "title"
-                ? ""
-                : page.kind.toUpperCase()}
-          </span>
-        </div>
+        <PageRunningText
+          design={design}
+          position="header"
+          isTitle={page.kind === "title"}
+          readOnly={readOnly}
+          onActivate={() => onFocus(editor, page.id)}
+        />
         {page.kind === "toc" ? (
           <section className="generated">
             <p className="eyebrow">FIND YOUR WAY</p>
@@ -459,13 +459,13 @@ export function PageEditor({
               Continued on next page ↘
             </div>
           )}
-        <footer className="page-footer">
-          <span>{design.footer}</span>
-          {!design.hideNumber && page.kind !== "title" && (
-            <b>{pageNumber(doc, index) + part}</b>
-          )}
-          <span>{doc.title}</span>
-        </footer>
+        <PageRunningText
+          design={design}
+          position="footer"
+          isTitle={page.kind === "title"}
+          readOnly={readOnly}
+          onActivate={() => onFocus(editor, page.id)}
+        />
         {overflow && (
           <div className="overflow-note no-print">
             {oversized

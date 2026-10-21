@@ -103,7 +103,7 @@
   justify-content: center;
   opacity: 0.65;
 }
-.paper.title .page-footer span:last-child {
+.paper.title .page-footer span:last-of-type {
   display: none;
 }
 .generated h1 {

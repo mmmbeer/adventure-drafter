@@ -24,6 +24,7 @@ export function PageCanvas() {
     overflow,
     reclaim,
     activePage,
+    openDialog,
     addPage,
   } = useDesk();
   return (
@@ -49,6 +50,11 @@ export function PageCanvas() {
           </span>
         </div>
         <div>
+          {!preview && (
+            <button onClick={() => openDialog("running-text")}>
+              Header &amp; footer
+            </button>
+          )}
           <select
             aria-label="Page zoom"
             value={fit ? "fit" : zoom}
@@ -105,4 +111,3 @@ export function PageCanvas() {
     </main>
   );
 }
-

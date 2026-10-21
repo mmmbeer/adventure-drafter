@@ -27,7 +27,14 @@ export function mergeValue(doc: Adventure, name: string, page: number): string {
     case "pages":
       return String(physicalPageCount(doc));
     case "footer":
-      return doc.settings.footer || doc.author;
+      return (
+        doc.settings.runningText?.footerLeft ??
+        (doc.settings.footer || doc.author)
+      ).replace(
+        /\{(title|subtitle|author|page|pages|footer)\}/g,
+        (_, tag: string) =>
+          tag === "footer" ? doc.author : mergeValue(doc, tag, page),
+      );
     default:
       return `{${name}}`;
   }
