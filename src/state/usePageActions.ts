@@ -8,6 +8,7 @@ import {
   type PageKind,
 } from "../lib/model";
 import type { WorkspaceState } from "./useWorkspaceState";
+import { applyPageFlow, applyBackflow } from "../lib/page-flow";
 import { appendFlow, type BackflowPlan } from "../lib/backflow";
 export function usePageActions(state: WorkspaceState) {
   const {
@@ -39,40 +40,18 @@ export function usePageActions(state: WorkspaceState) {
     [update],
   );
   const overflow = useCallback(
-    (id: string, nodes: JSONContent[], cursor?: number) =>
+    (
+      id: string,
+      before: JSONContent[],
+      remaining: JSONContent[],
+      nodes: JSONContent[],
+      cursor?: number,
+    ) =>
       update((d) => {
-        const i = d.pages.findIndex((p) => p.id === id);
-        if (i < 0 || !nodes.length || d.pages.length >= 1000) return d;
-        const pages = [...d.pages];
-        const next = pages[i + 1];
-        let nextId = next?.id;
-        if (
-          next?.kind === "body" &&
-          (!next.breakBefore || next.continuedFrom === id)
-        ) {
-          pages[i + 1] = {
-            ...next,
-            continuedFrom: id,
-            content: {
-              type: "doc",
-              content: [...nodes, ...(next.content.content ?? [])],
-            },
-          };
-        } else {
-          const p = {
-            ...makePage("body", nodes),
-            breakBefore: false,
-            continuedFrom: id,
-            columns: pages[i].columns,
-            masterId:
-              pages[i].masterId === "chapter-opener" ||
-              pages[i].masterId === "cover"
-                ? undefined
-                : pages[i].masterId,
-          };
-          pages.splice(i + 1, 0, p);
-          nextId = p.id;
-        }
+        const result = applyPageFlow(d, id, before, remaining, nodes);
+        if (result === d) return d;
+        const i = result.pages.findIndex((p) => p.id === id);
+        const nextId = result.pages[i + 1]?.id;
         if (cursor !== undefined)
           setTimeout(() => {
             const ed = editors.current.get(nextId!);
@@ -85,51 +64,13 @@ export function usePageActions(state: WorkspaceState) {
                 .run();
             }
           }, 80);
-        return { ...d, pages };
+        return result;
       }),
     [update],
   );
   const reclaim = useCallback(
     (id: string, plan: BackflowPlan) => {
-      update((d) => {
-        const i = d.pages.findIndex((p) => p.id === id);
-        const prev = d.pages[i],
-          source = d.pages[i + 1];
-        if (
-          i < 0 ||
-          !prev ||
-          !source ||
-          source.id !== plan.sourceId ||
-          prev.kind !== "body" ||
-          source.kind !== "body" ||
-          source.continuedFrom !== id ||
-          source.breakBefore ||
-          source.masterId !== prev.masterId ||
-          JSON.stringify(source.content.content ?? []) !==
-            JSON.stringify(plan.source)
-        )
-          return d;
-        const pages = [...d.pages];
-        pages[i] = {
-          ...prev,
-          content: {
-            type: "doc",
-            content: appendFlow(prev.content.content ?? [], plan.pulled),
-          },
-        };
-        const tail = [
-          ...(plan.remainder ? [plan.remainder] : []),
-          ...(source.content.content ?? []).slice(plan.consumed),
-        ];
-        if (tail.length) {
-          pages[i + 1] = { ...source, content: { type: "doc", content: tail } };
-        } else {
-          pages.splice(i + 1, 1);
-          if (pages[i + 1]?.continuedFrom === source.id)
-            pages[i + 1] = { ...pages[i + 1], continuedFrom: id };
-        }
-        return { ...d, pages };
-      });
+      update((d) => applyBackflow(d, id, plan));
       if (
         active === plan.sourceId &&
         plan.consumed === plan.source.length &&
@@ -226,7 +167,10 @@ export function usePageActions(state: WorkspaceState) {
         continuedFrom: undefined,
         content: {
           type: "doc",
-          content: buffer.flatMap((p) => p.content.content ?? []),
+          content: buffer.reduce<JSONContent[]>(
+            (all, p) => appendFlow(all, p.content.content ?? []),
+            [],
+          ),
         },
       });
       buffer = [];

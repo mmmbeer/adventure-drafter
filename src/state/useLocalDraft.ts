@@ -20,10 +20,11 @@ export function useLocalDraft(
   const [status, setStatus] = useState("Opening…");
   const savePending = useRef(false);
   const update = useCallback((fn: (d: Adventure) => Adventure) => {
-    setDoc((d) => ({
-      ...identifyDocument(fn(d)),
-      updatedAt: new Date().toISOString(),
-    }));
+    setDoc((d) => {
+      const next = fn(d);
+      if (next === d) return d;
+      return { ...identifyDocument(next), updatedAt: new Date().toISOString() };
+    });
   }, []);
   useEffect(() => {
     loadLast()

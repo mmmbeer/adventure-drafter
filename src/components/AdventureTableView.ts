@@ -36,6 +36,7 @@ export class AdventureTableView extends TableView {
     Object.assign(this.table.style, boxCss(node.attrs.boxFormat));
     const wide = String(!!node.attrs.wide);
     this.dom.dataset.wide = wide;
+    this.dom.dataset.keep = String(!!node.attrs.keep);
     this.dom.dataset.styleId = node.attrs.styleId || "";
     this.dom.dataset.refId = node.attrs.refId || "";
     this.table.removeAttribute("id");

@@ -153,6 +153,9 @@
   font-weight: bold;
   background: color-mix(in srgb, var(--accent) 13%, var(--paper));
 }
+.tiptap tr {
+  break-inside: avoid;
+}
 .tiptap tr:nth-child(even) {
   background: color-mix(in srgb, var(--accent) 5%, transparent);
 }
@@ -164,10 +167,15 @@
   pointer-events: none;
 }
 .tiptap .tableWrapper {
+  /* Explicit row groups paginate as units, never clipped CSS fragments. */
+  display: inline-block;
+  vertical-align: top;
+  width: 100%;
   break-inside: avoid;
   max-width: 100%;
 }
 .tiptap .tableWrapper[data-wide="true"] {
+  display: block;
   column-span: all;
 }
 .tiptap .tableWrapper[data-wide="true"] > table {
