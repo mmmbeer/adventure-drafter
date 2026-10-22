@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Download } from "lucide-react";
 import { useDesk } from "../../state/context";
 import { DialogActions } from "../Modal";
+import { InfoCard } from "../InfoCard";
+import { ExportInformation } from "./ExportInformation";
 import { exportPageChoices } from "../../lib/export-capture";
 import type { ExportFormat } from "../../state/usePublishingActions";
 
@@ -41,60 +43,29 @@ export function ExportDialog() {
       <fieldset className="export-format-options" disabled={!!busy}>
         <legend>Export format</legend>
         {formats.map((item) => (
-          <label key={item.id} className={format === item.id ? "selected" : ""}>
-            <input
-              type="radio"
-              name="export-format"
-              value={item.id}
-              checked={format === item.id}
-              onChange={() => setFormat(item.id)}
-            />
-            <span>
-              <b>{item.name}</b>
-              <small>{item.detail}</small>
-            </span>
-          </label>
+          <div
+            key={item.id}
+            className={`export-format-option ${format === item.id ? "selected" : ""}`}
+          >
+            <label>
+              <input
+                type="radio"
+                name="export-format"
+                value={item.id}
+                checked={format === item.id}
+                onChange={() => setFormat(item.id)}
+              />
+              <span>
+                <b>{item.name}</b>
+                <small>{item.detail}</small>
+              </span>
+            </label>
+            <InfoCard label={`${item.name} information`}>
+              <ExportInformation format={item.id} />
+            </InfoCard>
+          </div>
         ))}
       </fieldset>
-      {format === "docx" && (
-        <section className="export-limits" aria-label="Word export limitations">
-          <b>Word export limitations</b>
-          <p>
-            Text and tables stay editable. Font names, sizes, colors, paper,
-            graphical rules, column widths and merged cells follow the document.
-            Install the chosen fonts on the device opening the file. Fonts are
-            not embedded.
-          </p>
-          <p>
-            Word lays out text differently. Line wrapping, table continuation,
-            column and page breaks can shift. Wide blocks use Word sections.
-            Continued tables remain separate editable fragments. Floating
-            shapes, transparency and text wrapping around artwork may differ.
-            Paper colors use native Word shapes. Background artwork stays
-            separate from the editable text.
-          </p>
-          <p>
-            Page numbers in headers and footers update in Word. Contents, index
-            and cross-reference labels reflect the export and may need updating
-            after edits.
-          </p>
-        </section>
-      )}
-      {format === "pdf" && (
-        <p className="export-limits">
-          Preserves the on-screen fonts, sizes, colors, paper, graphical rules
-          and table breaks at 300 DPI. Visible pages are flattened, with a
-          searchable text layer.
-        </p>
-      )}
-      {format === "markdown" && (
-        <p className="export-limits">
-          Markdown preserves content and rejoins continued tables. It cannot
-          preserve paper colors, fonts, font sizes or exact page and column
-          layouts. Merged tables use HTML and artwork is embedded. Display
-          depends on your Markdown reader.
-        </p>
-      )}
       {format === "image" && (
         <>
           <label>
@@ -111,10 +82,6 @@ export function ExportDialog() {
               ))}
             </select>
           </label>
-          <p className="export-limits">
-            Preserves the selected physical page, including continued contents
-            and index pages, at 300 DPI.
-          </p>
         </>
       )}
       <DialogActions>
