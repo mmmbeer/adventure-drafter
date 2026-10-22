@@ -9,18 +9,28 @@
   font-size: 11px;
   color: #727c71;
 }
+.export-format-option {
+  display: flex;
+  align-items: flex-start;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  margin-bottom: 7px;
+}
+.export-format-option > .info-card {
+  margin: 5px 5px 0 0;
+}
 .export-format-options label {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
   gap: 10px;
-  margin: 0 0 7px;
+  margin: 0;
+  flex: 1;
+  min-width: 0;
   padding: 11px;
-  border: 1px solid var(--line);
-  border-radius: 4px;
   cursor: pointer;
 }
-.export-format-options label.selected {
+.export-format-option.selected {
   border-color: #456750;
   background: #f3f6ee;
 }
@@ -39,12 +49,4 @@
   display: block;
   margin-top: 4px;
   line-height: 1.5;
-}
-.export-limits {
-  font-size: 11px;
-  line-height: 1.65;
-  color: #65715f;
-}
-.export-limits p {
-  margin: 7px 0;
 }
