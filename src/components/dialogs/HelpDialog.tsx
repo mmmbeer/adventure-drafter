@@ -35,9 +35,11 @@ export function HelpDialog() {
         <p>
           Changes autosave in this browser using IndexedDB. Named checkpoints
           live in Saved versions. Download JSON backups for portable editing.
-          Clearing browser data removes local manuscripts. PDF and
-          exact-appearance DOCX preserve the canvas as high-resolution images.
-          Editable DOCX preserves document structure with Word-dependent reflow.
+          Clearing browser data removes local manuscripts. Export editable Word,
+          searchable PDF, Markdown or one page as a PNG. PDF and PNG preserve
+          the rendered pages at 300 DPI. Word retains editable text and tables
+          with Word-dependent reflow. Markdown preserves content rather than
+          page design.
         </p>
       </section>
       <section>

@@ -1,0 +1,50 @@
+.export-format-options {
+  border: 0;
+  margin: 0 0 18px;
+  padding: 0;
+  min-width: 0;
+}
+.export-format-options legend {
+  margin-bottom: 10px;
+  font-size: 11px;
+  color: #727c71;
+}
+.export-format-options label {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 7px;
+  padding: 11px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.export-format-options label.selected {
+  border-color: #456750;
+  background: #f3f6ee;
+}
+.export-format-options input {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 2px 0 0;
+  accent-color: #456750;
+}
+.export-format-options b {
+  display: block;
+  color: #354037;
+  font-weight: 500;
+}
+.export-format-options small {
+  display: block;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+.export-limits {
+  font-size: 11px;
+  line-height: 1.65;
+  color: #65715f;
+}
+.export-limits p {
+  margin: 7px 0;
+}

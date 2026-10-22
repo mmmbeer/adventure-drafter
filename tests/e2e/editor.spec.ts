@@ -36,9 +36,14 @@ test("page editing, templates, generated references, local save, backup and rest
   await expect(page.locator(".tiptap").nth(1)).toContainText(
     "A secret about the Ember Archive.",
   );
-  await page.getByRole("button", { name: "Export", exact: true }).click();
+  await page.getByRole("button", { name: "Projects", exact: true }).click();
   const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: /Project backup/ }).click();
+  await page
+    .getByRole("button", {
+      name: "Download current project (.json)",
+      exact: true,
+    })
+    .click();
   const file = await downloadPromise;
   const path = test.info().outputPath("project.json");
   await file.saveAs(path);
@@ -85,21 +90,21 @@ test("all publishing downloads are produced and editable DOCX imports back", asy
 }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Export", exact: true }).click();
-  for (const [label, name] of [
-    ["PDF · exact appearance", "out.pdf"],
-    ["DOCX · exact appearance", "out.docx"],
-    ["DOCX · editable text", "editable.docx"],
+  for (const [format, name] of [
+    ["Word document", "editable.docx"],
+    ["PDF", "out.pdf"],
+    ["Markdown", "out.md"],
+    ["Page image", "out.png"],
   ]) {
+    await page.getByRole("radio", { name: new RegExp(`^${format}`) }).check();
     const pending = page.waitForEvent("download", { timeout: 60000 });
-    await page
-      .getByRole("button", {
-        name: new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
-      })
-      .click();
+    await page.getByRole("button", { name: /^Export / }).click();
     const file = await pending;
     const path = test.info().outputPath(name);
     await file.saveAs(path);
-    expect((await fs.stat(path)).size).toBeGreaterThan(5000);
+    expect((await fs.stat(path)).size).toBeGreaterThan(
+      name.endsWith(".md") ? 100 : 5000,
+    );
   }
   await page.getByLabel("Close dialog").click();
   await page.getByRole("button", { name: "Import", exact: true }).click();
@@ -215,11 +220,16 @@ test("pasted images, URL art, custom fonts and named versions survive a publishi
   );
   await expect(page.locator(".canvas img")).toHaveCount(1);
   await expect(page.locator(".page-background")).toHaveCount(1);
-  await expect(page.locator(".overflow-note")).toHaveCount(0, { timeout: 30000 });
+  await expect(page.locator(".overflow-note")).toHaveCount(0, {
+    timeout: 30000,
+  });
   await page.getByRole("button", { name: "Export", exact: true }).click();
   const download = page.waitForEvent("download", { timeout: 70000 });
-  await page.getByRole("button", { name: /PDF · exact appearance/ }).click();
-  const error = page.locator(".toast").filter({ hasText: /overflow|could not|failed|cannot|unavailable/i });
+  await page.getByRole("radio", { name: /^PDF/ }).check();
+  await page.getByRole("button", { name: "Export PDF", exact: true }).click();
+  const error = page
+    .locator(".toast")
+    .filter({ hasText: /overflow|could not|failed|cannot|unavailable/i });
   const output = await Promise.race([
     download,
     error.waitFor({ state: "visible", timeout: 70000 }).then(async () => {

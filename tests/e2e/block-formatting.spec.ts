@@ -178,7 +178,7 @@ test("editable Word export retains title, code and list formatting", async ({
   await page.getByLabel("List start number").fill("5");
   await page.getByRole("button", { name: "Export", exact: true }).click();
   const pending = page.waitForEvent("download");
-  await page.getByRole("button", { name: /DOCX · editable text/ }).click();
+  await page.getByRole("button", { name: "Export Word document" }).click();
   const download = await pending;
   const path = test.info().outputPath("formatting.docx");
   await download.saveAs(path);
