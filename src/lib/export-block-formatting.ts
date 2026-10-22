@@ -108,12 +108,12 @@ export interface WordList {
   reference: string;
   level: number;
 }
-export function wordLists() {
+export function wordLists(prefix = "") {
   const config: INumberingOptions["config"][number][] = [];
   return {
     config,
     add(node: JSONContent, parent?: WordList): WordList {
-      const reference = `adventure-list-${config.length}`;
+      const reference = `${prefix}adventure-list-${config.length}`;
       const level = Math.min((parent?.level ?? -1) + 1, 8);
       const bullet = node.type === "bulletList";
       const marker = node.attrs?.listStyleType;
@@ -151,12 +151,15 @@ export function wordContainer(
   children: (Paragraph | Table)[],
   value: unknown,
   defaults = {},
+  width?: number,
 ) {
   const overrides = Object.fromEntries(
     Object.entries(wordBox(value)).filter(([, item]) => item !== undefined),
   );
   return new Table({
-    width: { size: 100, type: "pct" },
+    width: width
+      ? { size: Math.round(width * 15), type: "dxa" }
+      : { size: 100, type: "pct" },
     borders: TableBorders.NONE,
     rows: [
       new TableRow({

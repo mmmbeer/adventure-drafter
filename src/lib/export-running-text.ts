@@ -5,6 +5,7 @@ import {
   PageNumber,
   TabStopType,
   TextRun,
+  type ParagraphChild,
 } from "docx";
 import type { pageDesign } from "./designs";
 import type { Adventure } from "./types";
@@ -16,8 +17,9 @@ export function wordRunningText(
   design: ReturnType<typeof pageDesign>,
   title: boolean,
   width: number,
+  artwork: ParagraphChild[] = [],
 ) {
-  const runs = (template: string) =>
+  const runs = (template: string, size: number, font = "Inter") =>
     template
       .replaceAll("{chapter}", design.chapter)
       .replace(/\{(title|subtitle|author|footer)\}/g, (_, tag: string) =>
@@ -28,26 +30,39 @@ export function wordRunningText(
       .map((part) =>
         part === "{page}" || part === "{pages}"
           ? new TextRun({
+              font,
+              size: `${size / 2}pt`,
+              color: doc.settings.theme.accent.slice(1),
               children: [
                 part === "{page}" ? PageNumber.CURRENT : PageNumber.TOTAL_PAGES,
               ],
             })
-          : new TextRun(part),
+          : new TextRun({
+              text: part,
+              font,
+              size: `${size / 2}pt`,
+              color: doc.settings.theme.accent.slice(1),
+            }),
       );
   const text = design.templates;
-  const line = (left: string, center: string, right: string) =>
+  const line = (left: string, center: string, right: string, size = 13.5) =>
     new Paragraph({
-      style: "RunningText",
+      spacing: { before: 0, after: 0 },
       tabStops: [
         { type: TabStopType.CENTER, position: Math.round((width * 15) / 2) },
         { type: TabStopType.RIGHT, position: Math.round(width * 15) },
       ],
       children: [
-        ...runs(left),
+        ...(size === 12 ? artwork : []),
+        ...runs(left, size),
         new TextRun("\t"),
-        ...runs(center),
+        ...runs(
+          center,
+          size === 12 ? 12 : 19.5,
+          size === 12 ? "Inter" : doc.settings.theme.headingFont,
+        ),
         new TextRun("\t"),
-        ...runs(right),
+        ...runs(right, size),
       ],
     });
   return {
@@ -55,8 +70,8 @@ export function wordRunningText(
       default: new Header({
         children: [
           design.hideHeader
-            ? line("", "", "")
-            : line(text.headerLeft, "", text.headerRight),
+            ? line("", "", "", 12)
+            : line(text.headerLeft, "", text.headerRight, 12),
         ],
       }),
     },

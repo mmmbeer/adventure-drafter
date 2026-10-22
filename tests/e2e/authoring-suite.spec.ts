@@ -278,10 +278,9 @@ test("searchable PDF contains text mapping, bookmarks, internal destinations and
 }, testInfo) => {
   await openFixture(page);
   await page.getByRole("button", { name: "Export", exact: true }).click();
+  await page.getByRole("radio", { name: /^PDF/ }).check();
   const downloaded = page.waitForEvent("download").catch(() => null);
-  await page
-    .getByRole("button", { name: "PDF · searchable with links", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Export PDF", exact: true }).click();
   await expect(page.locator(".busy-overlay")).toHaveCount(0, {
     timeout: 60000,
   });

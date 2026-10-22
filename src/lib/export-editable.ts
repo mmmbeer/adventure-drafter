@@ -1,441 +1,176 @@
 import {
-  wordBox,
-  wordContainer,
-  wordTextStyles,
-  wordTextStyle,
-  wordLists,
-  type WordList,
-} from "./export-block-formatting";
-import { pageDesign } from "./designs";
-import { pngImage, wordDivider } from "./export-images";
-import { wordRunningText } from "./export-running-text";
-import { referenceValue } from "./cross-references";
-import {
   Document,
   Paragraph,
-  TextRun,
   Table,
-  TableRow,
-  TableCell,
-  ImageRun,
   Packer,
-  AlignmentType,
-  BorderStyle,
-  VerticalPositionRelativeFrom,
-  HorizontalPositionRelativeFrom,
-  TextWrappingType,
+  Bookmark,
   ColumnBreak,
-  ExternalHyperlink,
+  SectionType,
+  VerticalAlignSection,
+  LineRuleType,
+  type ISectionOptions,
 } from "docx";
-import type { JSONContent } from "@tiptap/core";
-import {
-  entries,
-  keywordIndex,
-  sizes,
-  pageNumber,
-  type Adventure,
-} from "./model";
-import { mergeValue } from "./merge-tags";
+import type { Adventure } from "./types";
+import { sizes } from "./templates";
+import { pageDesign } from "./designs";
+import { cleanExportPage, renderedPapers } from "./export-layout";
+import { wordPaper } from "./word-paper";
+import { wordRunningText } from "./export-running-text";
+import { wordContent, wordBookmark } from "./word-content";
+import { wordColor } from "./word-format";
+import { wordStyles } from "./word-styles";
 import { download, filename } from "./export";
+
+function pageAnchor(id: string) {
+  return new Paragraph({
+    children: [new Bookmark({ id: wordBookmark(id), children: [] })],
+    spacing: { before: 0, after: 0, line: 1, lineRule: LineRuleType.EXACT },
+    keepNext: true,
+  });
+}
+
+export async function editableWordDocument(
+  doc: Adventure,
+  progress: (s: string) => void,
+) {
+  const size = sizes[doc.settings.size];
+  const theme = doc.settings.theme;
+  const stage = document.createElement("div");
+  stage.className = "export-stage";
+  stage.style.cssText =
+    "position:fixed;left:-20000px;top:0;z-index:-1;zoom:1;pointer-events:none";
+  const pages = renderedPapers().map(cleanExportPage);
+  if (!pages.length) throw new Error("No pages are available to export.");
+  stage.append(...pages);
+  document.body.append(stage);
+  const sections: ISectionOptions[] = [];
+  const numbering = [];
+  const bookmarks = new Set<string>();
+  try {
+    await document.fonts.ready;
+    for (const [physical, paper] of pages.entries()) {
+      progress(
+        `Converting editable Word page ${physical + 1} of ${pages.length}…`,
+      );
+      const index = doc.pages.findIndex((p) => p.id === paper.dataset.pageId);
+      const page = doc.pages[index];
+      const design = pageDesign(
+        doc,
+        page,
+        index,
+        Number(paper.dataset.part || 0),
+      );
+      const width = size.width - design.left - design.right;
+      const columns = page.kind === "body" ? design.columns : 1;
+      const root = paper.querySelector<HTMLElement>(
+        ".page-writing .tiptap,.generated",
+      )!;
+      const writing = root.getBoundingClientRect();
+      const converter = wordContent(
+        doc,
+        design.paper,
+        `page-${physical}-`,
+        bookmarks,
+      );
+      const groups: { columns: number; children: (Paragraph | Table)[] }[] = [];
+      let previousColumn = 0;
+      for (const element of [...root.children] as HTMLElement[]) {
+        const wide =
+          element.dataset.wide === "true" ||
+          getComputedStyle(element).columnSpan === "all";
+        const count = wide ? 1 : columns;
+        let group = groups.at(-1);
+        if (!group || group.columns !== count) {
+          group = { columns: count, children: [] };
+          groups.push(group);
+          previousColumn = 0;
+        }
+        const available = (width - doc.settings.gutter * (count - 1)) / count;
+        const rects = [...element.getClientRects()];
+        const columnAt = (left: number) =>
+          Math.max(
+            0,
+            Math.min(
+              count - 1,
+              Math.round(
+                (left - writing.left) / (available + doc.settings.gutter),
+              ),
+            ),
+          );
+        const firstColumn = columnAt(rects[0]?.left ?? writing.left);
+        if (firstColumn > previousColumn && group.children.length)
+          group.children.push(
+            new Paragraph({
+              children: [new ColumnBreak()],
+              spacing: { before: 0, after: 0 },
+            }),
+          );
+        group.children.push(...(await converter.convert(element, available)));
+        previousColumn = columnAt(rects.at(-1)?.left ?? writing.left);
+      }
+      numbering.push(...converter.lists.config);
+      const artwork = await wordPaper(doc, design);
+      if (!groups.length)
+        groups.push({ columns, children: [new Paragraph("")] });
+      if (!Number(paper.dataset.part))
+        groups[0].children.unshift(pageAnchor(`page-${page.id}`));
+      for (const [groupIndex, group] of groups.entries()) {
+        sections.push({
+          properties: {
+            type:
+              groupIndex === 0 ? SectionType.NEXT_PAGE : SectionType.CONTINUOUS,
+            column: { count: group.columns, space: doc.settings.gutter * 15 },
+            verticalAlign:
+              page.kind === "title"
+                ? VerticalAlignSection.CENTER
+                : VerticalAlignSection.TOP,
+            page: {
+              size: { width: size.width * 15, height: size.height * 15 },
+              margin: {
+                top: design.margin * 15,
+                bottom: design.margin * 15,
+                left: design.left * 15,
+                right: design.right * 15,
+                header: 23 * 15,
+                footer: 24 * 15,
+              },
+              pageNumbers:
+                sections.length === 0
+                  ? { start: doc.settings.pageStart }
+                  : undefined,
+            },
+          },
+          ...wordRunningText(
+            doc,
+            design,
+            page.kind === "title",
+            width,
+            artwork,
+          ),
+          children: group.children,
+        });
+      }
+    }
+    return new Document({
+      title: doc.title,
+      creator: doc.author,
+      description:
+        "Editable text and tables. Word may reflow line, column and page breaks. Install the document fonts for the closest match.",
+      background: { color: wordColor(theme.paper) },
+      features: { updateFields: true },
+      styles: wordStyles(doc),
+      numbering: { config: numbering },
+      sections,
+    });
+  } finally {
+    stage.remove();
+  }
+}
 export async function exportEditable(
   doc: Adventure,
   progress: (s: string) => void,
 ) {
-  const theme = doc.settings.theme;
-  const color = (s: string) => s.replace("#", "");
-  const accent = color(theme.accent);
-  const ink = color(theme.ink);
-  const sz = sizes[doc.settings.size];
-  const lists = wordLists();
-  let currentPage = doc.settings.pageStart;
-  let contentWidth = sz.width - doc.settings.margin * 2;
-  let pageColumns = doc.settings.columns;
-  function runs(nodes: JSONContent[] = []): (TextRun | ExternalHyperlink)[] {
-    return nodes.flatMap((n) => {
-      if (n.type === "hardBreak") return [new TextRun({ break: 1 })];
-      if (n.type === "crossReference")
-        return [new TextRun(referenceValue(doc, n.attrs ?? {}))];
-      if (n.type === "mergeTag")
-        return [new TextRun(mergeValue(doc, n.attrs?.name || "", currentPage))];
-      if (n.type !== "text") return runs(n.content);
-      const m = (type: string) => n.marks?.find((m) => m.type === type);
-      const run = new TextRun({
-        text: n.text ?? "",
-        bold: !!m("bold"),
-        italics: !!m("italic"),
-        underline: m("underline") ? {} : undefined,
-        strike: !!m("strike"),
-        superScript: !!m("superscript"),
-        subScript: !!m("subscript"),
-        font: m("textStyle")?.attrs?.fontFamily,
-        size: m("textStyle")?.attrs?.fontSize
-          ? Math.round(Number.parseFloat(m("textStyle")!.attrs!.fontSize) * 1.5)
-          : undefined,
-        color: m("textStyle")?.attrs?.color
-          ? color(m("textStyle")!.attrs!.color)
-          : undefined,
-        shading: m("highlight") ? { fill: "F5D681" } : undefined,
-      });
-      const href = m("link")?.attrs?.href;
-      return href && /^(https?:|mailto:)/i.test(href)
-        ? [new ExternalHyperlink({ link: href, children: [run] })]
-        : [run];
-    });
-  }
-  const border = { style: BorderStyle.SINGLE, size: 5, color: accent };
-  async function convert(
-    n: JSONContent,
-    list?: WordList,
-  ): Promise<(Paragraph | Table)[]> {
-    if (n.type === "image") {
-      try {
-        const image = await pngImage(n.attrs?.src);
-        const availableWidth =
-          (sz.width - doc.settings.margin * 2 - doc.settings.gutter) /
-          (doc.settings.columns || 2);
-        const width = availableWidth * (Number(n.attrs?.width ?? 100) / 100);
-        const height = (width * image.height) / image.width;
-        const scale = Math.min(
-          1,
-          (sz.height - doc.settings.margin * 2 - 40) / height,
-        );
-        return [
-          new Paragraph({
-            children: [
-              new ImageRun({
-                type: "png",
-                data: image.data,
-                transformation: {
-                  width: width * scale,
-                  height: height * scale,
-                },
-                altText: {
-                  name: n.attrs?.alt || "Adventure illustration",
-                  title: n.attrs?.alt || "",
-                  description: n.attrs?.alt || "",
-                },
-              }),
-            ],
-          }),
-        ];
-      } catch {
-        throw new Error(
-          "An image could not be included in editable DOCX. Upload it again.",
-        );
-      }
-    }
-    if (n.type === "table") {
-      const rows: TableRow[] = [];
-      for (const row of n.content ?? []) {
-        const cells: TableCell[] = [];
-        for (const cell of row.content ?? []) {
-          const children = (
-            await Promise.all((cell.content ?? []).map((c) => convert(c)))
-          ).flat();
-          cells.push(
-            new TableCell({
-              children: children.length ? children : [new Paragraph("")],
-              columnSpan: cell.attrs?.colspan || 1,
-              ...wordBox(cell.attrs?.boxFormat),
-              shading:
-                wordBox(cell.attrs?.boxFormat).shading ||
-                (cell.type === "tableHeader"
-                  ? { fill: color(theme.paper) }
-                  : undefined),
-              borders: {
-                top: border,
-                bottom: border,
-                left: border,
-                right: border,
-                ...wordBox(cell.attrs?.boxFormat).borders,
-              },
-            }),
-          );
-        }
-        rows.push(
-          new TableRow({
-            children: cells,
-            tableHeader: row.content?.some((c) => c.type === "tableHeader"),
-          }),
-        );
-      }
-      return [
-        new Table({
-          rows,
-          width: { size: 100, type: "pct" },
-          ...wordBox(n.attrs?.boxFormat),
-        }),
-      ];
-    }
-    if (n.type === "callout" || n.type === "statBlock") {
-      const children = (
-        await Promise.all((n.content ?? []).map((c) => convert(c)))
-      ).flat();
-      return [
-        wordContainer(children, n.attrs?.boxFormat, {
-          shading: { fill: color(theme.paper) },
-          borders: { top: border, bottom: border, left: border, right: border },
-          margins: { top: 100, bottom: 100, left: 130, right: 130 },
-        }),
-      ];
-    }
-    if (n.type === "blockquote") {
-      const children = (
-        await Promise.all((n.content ?? []).map((c) => convert(c, list)))
-      ).flat();
-      return [
-        wordContainer(children, n.attrs?.boxFormat, {
-          borders: { left: border },
-          margins: { left: 150 },
-        }),
-      ];
-    }
-    if (n.type === "bulletList" || n.type === "orderedList") {
-      const current = lists.add(n, list);
-      const children = (
-        await Promise.all((n.content ?? []).map((c) => convert(c, current)))
-      ).flat();
-      return n.attrs?.boxFormat && Object.keys(n.attrs.boxFormat).length
-        ? [wordContainer(children, n.attrs.boxFormat)]
-        : children;
-    }
-    if (n.type === "listItem")
-      return (
-        await Promise.all(
-          (n.content ?? []).map((c, i) =>
-            convert(
-              c,
-              i === 0 || c.type === "bulletList" || c.type === "orderedList"
-                ? list
-                : undefined,
-            ),
-          ),
-        )
-      ).flat();
-    if (n.type === "columnBreak")
-      return [
-        new Paragraph({
-          children: [new ColumnBreak()],
-          pageBreakBefore: false,
-        }),
-      ];
-    if (n.type === "horizontalRule") {
-      const width = n.attrs?.wide
-        ? contentWidth
-        : (contentWidth - doc.settings.gutter * (pageColumns - 1)) /
-          pageColumns;
-      return [await wordDivider(n, theme, width, border)];
-    }
-    if (
-      n.type === "paragraph" ||
-      n.type === "heading" ||
-      n.type === "codeBlock"
-    )
-      return [
-        new Paragraph({
-          children:
-            n.type === "codeBlock"
-              ? (n.content ?? [])
-                  .map((c) => c.text || "")
-                  .join("")
-                  .split("\n")
-                  .flatMap((text, i) => [
-                    new TextRun({ text, break: i ? 1 : undefined }),
-                  ])
-              : runs(n.content),
-          border: wordBox(n.attrs?.boxFormat).borders,
-          shading: wordBox(n.attrs?.boxFormat).shading,
-          style:
-            n.attrs?.styleId ||
-            wordTextStyle(n) ||
-            (n.type === "heading"
-              ? `AdventureHeading${n.attrs?.level || 1}`
-              : undefined),
-          alignment:
-            (
-              {
-                center: AlignmentType.CENTER,
-                right: AlignmentType.RIGHT,
-                justify: AlignmentType.JUSTIFIED,
-              } as Record<
-                string,
-                (typeof AlignmentType)[keyof typeof AlignmentType]
-              >
-            )[n.attrs?.textAlign] || AlignmentType.LEFT,
-          keepNext: n.type === "heading" || n.attrs?.keep,
-          spacing: {
-            before: parseFloat(n.attrs?.spaceBefore ?? "0") * 15,
-            after: n.attrs?.spaceAfter
-              ? parseFloat(n.attrs.spaceAfter) * 15
-              : 100,
-            line: Math.round(
-              Number(n.attrs?.lineHeight ?? doc.settings.lineHeight) * 240,
-            ),
-          },
-          indent: n.attrs?.indent
-            ? { left: Number(n.attrs.indent) * 15 }
-            : undefined,
-          ...(list ? { numbering: list } : {}),
-        }),
-      ];
-    return (
-      await Promise.all((n.content ?? []).map((c) => convert(c, list)))
-    ).flat();
-  }
-  const sections = [];
-  for (let i = 0; i < doc.pages.length; i++) {
-    progress(`Converting page ${i + 1}…`);
-    const p = doc.pages[i];
-    const design = pageDesign(doc, p, i);
-    currentPage = pageNumber(doc, i);
-    contentWidth = sz.width - design.left - design.right;
-    pageColumns = ["title", "toc", "index"].includes(p.kind)
-      ? 1
-      : design.columns;
-    let children: (Paragraph | Table)[] = [];
-    if (p.kind === "toc") {
-      children = [
-        new Paragraph({ text: "Contents", style: "AdventureHeading1" }),
-        ...entries(doc)
-          .filter((e) => e.level <= doc.settings.tocDepth)
-          .map(
-            (e) =>
-              new Paragraph({
-                text: `${e.title}    ${e.page}`,
-                indent: { left: (e.level - 1) * 180 },
-              }),
-          ),
-      ];
-    } else if (p.kind === "index") {
-      children = [
-        new Paragraph({ text: "Index", style: "AdventureHeading1" }),
-        ...keywordIndex(doc).map(
-          (e) => new Paragraph(`${e.term}    ${e.pages.join(", ")}`),
-        ),
-      ];
-    } else
-      children = (
-        await Promise.all((p.content.content ?? []).map((c) => convert(c)))
-      ).flat();
-    if (design.background || design.paper !== theme.paper) {
-      const background = await pngImage(design.background, {
-        opacity: design.backgroundOpacity,
-        paper: design.paper,
-        width: sz.width,
-        height: sz.height,
-      });
-      children.unshift(
-        new Paragraph({
-          children: [
-            new ImageRun({
-              type: "png",
-              data: background.data,
-              transformation: { width: sz.width, height: sz.height },
-              floating: {
-                horizontalPosition: {
-                  relative: HorizontalPositionRelativeFrom.PAGE,
-                  offset: 0,
-                },
-                verticalPosition: {
-                  relative: VerticalPositionRelativeFrom.PAGE,
-                  offset: 0,
-                },
-                behindDocument: true,
-                wrap: { type: TextWrappingType.NONE },
-                allowOverlap: true,
-              },
-            }),
-          ],
-        }),
-      );
-    }
-    sections.push({
-      properties: {
-        column: {
-          count:
-            p.kind === "title" || p.kind === "toc" || p.kind === "index"
-              ? 1
-              : design.columns,
-          space: doc.settings.gutter * 15,
-        },
-        page: {
-          size: { width: sz.width * 15, height: sz.height * 15 },
-          margin: {
-            top: design.margin * 15,
-            bottom: design.margin * 15,
-            left: design.left * 15,
-            right: design.right * 15,
-          },
-          pageNumbers: i === 0 ? { start: doc.settings.pageStart } : undefined,
-        },
-      },
-      ...wordRunningText(doc, design, p.kind === "title", contentWidth),
-      children,
-    });
-  }
-  const file = new Document({
-    title: doc.title,
-    creator: doc.author,
-    background: { color: color(theme.paper) },
-    styles: {
-      default: {
-        document: {
-          run: {
-            font: theme.bodyFont,
-            size: Math.round(doc.settings.fontSize * 1.5),
-            color: ink,
-          },
-        },
-      },
-      paragraphStyles: [
-        ...wordTextStyles(doc),
-        ...(doc.namedStyles ?? []).map((s) => ({
-          id: s.id,
-          name: s.name,
-          basedOn: "Normal",
-          quickFormat: true,
-          run: {
-            font: s.fontFamily,
-            size: s.fontSize * 1.5,
-            color: color(s.color),
-            bold: s.bold,
-            italics: s.italic,
-          },
-          paragraph: {
-            spacing: {
-              before: s.spaceBefore * 15,
-              after: s.spaceAfter * 15,
-              line: s.lineHeight * 240,
-            },
-          },
-        })),
-        {
-          id: "RunningText",
-          name: "Running text",
-          run: { size: 16, color: accent },
-        },
-        ...Array.from({ length: 9 }, (_, i) => ({
-          id: `AdventureHeading${i + 1}`,
-          name: `Heading ${i + 1}`,
-          basedOn: "Normal",
-          next: "Normal",
-          quickFormat: true,
-          run: {
-            font: theme.headingFont,
-            color: accent,
-            bold: true,
-            size: [44, 32, 26, 24, 22, 20, 20, 18, 18][i],
-          },
-          paragraph: {
-            outlineLevel: i,
-            keepNext: true,
-            spacing: { before: 180, after: 100 },
-          },
-        })),
-      ],
-    },
-    numbering: { config: lists.config },
-    sections,
-  });
-  download(await Packer.toBlob(file), `${filename(doc)}-editable.docx`);
+  const file = await editableWordDocument(doc, progress);
+  progress("Building Word document…");
+  download(await Packer.toBlob(file), `${filename(doc)}.docx`);
 }

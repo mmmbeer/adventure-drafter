@@ -81,11 +81,12 @@ export function PublishingPanel() {
           className="primary wide-button"
           onClick={() => onDialog("export")}
         >
-          Export PDF / DOCX <ChevronDown size={14} />
+          Export document / page <ChevronDown size={14} />
         </button>
         <p className="help">
-          Preview all pages before exporting. Appearance-preserving exports
-          match the page canvas.
+          Export editable Word, PDF, Markdown or a page image. Preview all pages
+          before exporting. Word and Markdown have format-specific layout
+          limits.
         </p>
       </section>
     </>

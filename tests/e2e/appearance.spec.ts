@@ -156,10 +156,13 @@ test("appearance survives reload and project backup import", async ({
   await expect(page.getByLabel("Font pairing", { exact: true })).toHaveValue(
     "scribe",
   );
-  await page.getByRole("button", { name: "Export", exact: true }).click();
+  await page.getByRole("button", { name: "Projects", exact: true }).click();
   const pending = page.waitForEvent("download");
   await page
-    .getByRole("button", { name: "Project backup · JSON", exact: true })
+    .getByRole("button", {
+      name: "Download current project (.json)",
+      exact: true,
+    })
     .click();
   const download = await pending;
   const path = test.info().outputPath("appearance.json");
@@ -191,7 +194,7 @@ test("editable Word retains background, text colors and selected fonts", async (
   await page.getByRole("button", { name: "Export", exact: true }).click();
   const pending = page.waitForEvent("download");
   await page
-    .getByRole("button", { name: "DOCX · editable text", exact: true })
+    .getByRole("button", { name: "Export Word document", exact: true })
     .click();
   const path = test.info().outputPath("appearance.docx");
   await (await pending).saveAs(path);
