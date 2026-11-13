@@ -120,6 +120,29 @@
   color: #9ba58e;
   margin: 22px 0;
 }
+.word-paste-field {
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 10px;
+  margin: 10px 0;
+}
+.word-paste-field .tiptap {
+  min-height: 150px;
+  outline: none;
+  overflow-wrap: anywhere;
+}
+.word-paste-field:focus-within {
+  outline: 2px solid var(--accent, #586d46);
+}
+.word-paste-field table {
+  border-collapse: collapse;
+  width: 100%;
+}
+.word-paste-field td,
+.word-paste-field th {
+  border: 1px solid var(--line);
+  padding: 4px;
+}
 .or span {
   flex: 1;
   height: 1px;

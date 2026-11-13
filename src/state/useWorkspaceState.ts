@@ -32,7 +32,7 @@ export function useWorkspaceState() {
   const [query, setQuery] = useState("");
   const [replacement, setReplacement] = useState("");
   const [importSource, setImportSource] = useState("");
-  const [homebrew, setHomebrew] = useState(true);
+  const [importFormat, setImportFormat] = useState("homebrew");
   const [imageUrl, setImageUrl] = useState("");
   const [alt, setAlt] = useState("");
   const [caption, setCaption] = useState("");
@@ -193,8 +193,8 @@ export function useWorkspaceState() {
     setReplacement,
     importSource,
     setImportSource,
-    homebrew,
-    setHomebrew,
+    importFormat,
+    setImportFormat,
     imageUrl,
     setImageUrl,
     alt,

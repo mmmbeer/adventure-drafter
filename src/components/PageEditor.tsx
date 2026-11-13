@@ -3,7 +3,7 @@ import { PageRunningText } from "./PageRunningText";
 import { pageDesign } from "../lib/designs";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { extensions, cleanHtml, splitNode } from "../lib/editor";
+import { extensions, splitNode } from "../lib/editor";
 import { tableCursor } from "../lib/table-cursor";
 import { layoutFits } from "../lib/layout-measurement";
 import { planTableLayout } from "../lib/table-pagination";
@@ -92,10 +92,12 @@ export function PageEditor({
         spellcheck: "true",
         "data-page-id": page.id,
       },
-      transformPastedHTML: cleanHtml,
       handleTextInput: (_view, _from, _to, text) =>
         latest.current.onTextInput(text),
       handlePaste: (_, event) => {
+        // Word also supplies a preview bitmap. Let the rich HTML path handle
+        // the document so that its text, headings and tables are retained.
+        if (event.clipboardData?.getData("text/html")) return false;
         const items = [...(event.clipboardData?.items ?? [])].filter((i) =>
           /^image\/(png|jpe?g|webp|gif)$/.test(i.type),
         );

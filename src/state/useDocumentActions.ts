@@ -13,7 +13,7 @@ export function useDocumentActions(state: WorkspaceState) {
     setWarnings,
     setBusy,
     importSource,
-    homebrew,
+    importFormat,
     fileInput,
     report,
   } = state;
@@ -41,10 +41,17 @@ export function useDocumentActions(state: WorkspaceState) {
   const importAdventure = async (file?: File) => {
     setBusy("Importing adventure…");
     try {
-      const { importFile, importText } = await import("../lib/import");
+      const { importFile, importText, importWordHtml } =
+        await import("../lib/import");
       const result = file
         ? await importFile(file)
-        : await importText(importSource, "Imported adventure", homebrew);
+        : importFormat === "word"
+          ? importWordHtml(importSource)
+          : await importText(
+              importSource,
+              "Imported adventure",
+              importFormat === "homebrew",
+            );
       await saveVersion(docRef.current, "Before import");
       await activate(result.document);
       setWarnings(result.warnings);

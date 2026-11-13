@@ -1,4 +1,5 @@
 import { marked } from "marked";
+import { normalizeWordHtml } from "./word-html";
 import { generateJSON, generateHTML } from "@tiptap/core";
 import { cleanHtml, extensions } from "./editor";
 import {
@@ -10,6 +11,27 @@ import {
 export interface ImportResult {
   document: Adventure;
   warnings: string[];
+}
+export function importWordHtml(
+  source: string,
+  title = "Imported adventure",
+): ImportResult {
+  const html = cleanHtml(normalizeWordHtml(source));
+  const content = generateJSON(html, extensions()).content;
+  if (
+    !content?.length ||
+    !new DOMParser().parseFromString(html, "text/html").body.textContent?.trim()
+  )
+    throw new Error("Paste some Word document text before importing.");
+  const document = createAdventure(true);
+  document.title = title;
+  document.pages = [page("body", content)];
+  return {
+    document,
+    warnings: [
+      "Word styles were matched to the adventure's headings, body text, lists and quotes. Review page flow. Images linked to local Word files cannot be pasted; use a .docx upload to include them.",
+    ],
+  };
 }
 function homebrew(source: string, warnings: string[]) {
   if (
@@ -87,38 +109,18 @@ export async function importFile(file: File): Promise<ImportResult> {
     return { document: d, warnings: [] };
   }
   if (/\.docx$/i.test(file.name)) {
-    const mammoth = await import("mammoth");
-    const result = await mammoth.convertToHtml(
-      { arrayBuffer: await file.arrayBuffer() },
-      {
-        styleMap: Array.from(
-          { length: 9 },
-          (_, i) =>
-            `p[style-name='Heading ${i + 1}'] => ${i < 6 ? `h${i + 1}` : `div.heading-level-${i + 1}:fresh`}`,
-        ),
-      },
-    );
+    const { readWordFile } = await import("./import-word");
+    const result = await readWordFile(file);
     const d = createAdventure(true);
     d.title = file.name.replace(/\.docx$/i, "");
     d.pages = [
-      page(
-        "body",
-        generateJSON(
-          cleanHtml(
-            result.value.replace(
-              /<div class="heading-level-([789])">/g,
-              '<div data-level="$1">',
-            ),
-          ),
-          extensions(),
-        ).content,
-      ),
+      page("body", generateJSON(cleanHtml(result.html), extensions()).content),
     ];
     return {
       document: d,
       warnings: [
         "Word content, tables, headings and embedded images were imported. Word-specific page geometry, floating objects and background art require review.",
-        ...result.messages.map((m) => m.message),
+        ...result.warnings,
       ],
     };
   }
