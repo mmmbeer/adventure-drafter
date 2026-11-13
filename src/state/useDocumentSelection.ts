@@ -3,7 +3,7 @@ import type { Editor } from "@tiptap/core";
 import { DOMParser } from "@tiptap/pm/model";
 import { DocumentSelection } from "../lib/document-selection";
 import { dataUrl } from "../lib/fonts";
-import { cleanHtml } from "../lib/editor";
+import { cleanPastedHtml } from "../lib/editor";
 import type { WorkspaceState } from "./useWorkspaceState";
 
 export function useDocumentSelection(state: WorkspaceState) {
@@ -100,7 +100,7 @@ export function useDocumentSelection(state: WorkspaceState) {
       const images = [...data.items].filter((item) =>
         /^image\/(png|jpe?g|webp|gif)$/.test(item.type),
       );
-      if (images.length) {
+      if (images.length && !data.getData("text/html")) {
         stop(event);
         Promise.all(
           images.map(async (item) => {
@@ -121,7 +121,7 @@ export function useDocumentSelection(state: WorkspaceState) {
       const html = data.getData("text/html");
       if (html) {
         const root = document.createElement("div");
-        root.innerHTML = cleanHtml(html);
+        root.innerHTML = cleanPastedHtml(html);
         selection.replace(
           DOMParser.fromSchema(editor.schema).parse(root).toJSON().content,
         );

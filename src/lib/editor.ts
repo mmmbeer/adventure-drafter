@@ -1,4 +1,5 @@
 import { DividerDecoration } from "./dividers";
+import { isWordHtml, normalizeWordHtml } from "./word-html";
 import { SrdBlockMetadata, splitSrdBlock } from "./srd-block";
 import { BlockFormatting } from "./block-formatting";
 import { BoxFormatting } from "./box-formatting";
@@ -347,6 +348,18 @@ const Layout = Extension.create({
 });
 export function extensions() {
   return [
+    Extension.create({
+      name: "semanticPaste",
+      addProseMirrorPlugins() {
+        return [
+          new Plugin({
+            props: {
+              transformPastedHTML: cleanPastedHtml,
+            },
+          }),
+        ];
+      },
+    }),
     StarterKit.configure({
       heading: false,
       underline: {},
@@ -384,6 +397,9 @@ export function extensions() {
     Layout,
     DocumentSelectionDecoration,
   ];
+}
+export function cleanPastedHtml(html: string) {
+  return cleanHtml(isWordHtml(html) ? normalizeWordHtml(html) : html);
 }
 export function cleanHtml(html: string) {
   return DOMPurify.sanitize(html, {
